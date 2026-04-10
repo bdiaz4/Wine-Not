@@ -1,0 +1,256 @@
+import cv2 as opencv # image processing to make text more readable
+import pandas as pd # read wine dataset and manage collection
+from difflib import SequenceMatcher # compare read text to dataset
+import easyocr # read text from images
+import os # file handling
+
+
+def similarity(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+def keywordScore(queryWords, name):
+    nameWords = name.lower().split()
+    matches = sum(1 for w in queryWords if w in nameWords)
+    return matches / max(len(queryWords), 1)
+
+def findBestMatch(query, df, column):
+    query = query.lower()
+    queryWords = query.split()
+    bestScore = 0
+    bestRow = None
+    queryClean = ''.join(c if c.isalnum() else ' ' for c in query).split()
+
+    for _, row in df.iterrows():
+        name = str(row[column]).lower()
+        if abs(len(name) - len(query)) > 20:
+            continue
+        nameClean = ''.join(c if c.isalnum() else ' ' for c in name).split()
+        s1 = similarity(query, name)
+        if s1 < 0.3:
+            continue
+        s2 = keywordScore(queryWords, name)
+        wordMatches = sum(1 for w in queryClean if any(w in nw for nw in nameClean))
+        wordMatchScore = wordMatches / max(len(queryClean), 1)
+        score = 0.4 * s1 + 0.3 * s2 + 0.3 * wordMatchScore
+        if score > bestScore:
+            bestScore = score
+            bestRow = row
+    return bestRow, bestScore
+
+
+def wineCollection(wineName, collectionFile="wineCollection.csv"):
+    dfCollection = pd.read_csv(collectionFile)
+    if wineName in dfCollection["Wine Name"].values:
+        dfCollection.loc[dfCollection["Wine Name"] == wineName, "Count"] += 1
+        print(f"Updated '{wineName}' - New count: {dfCollection.loc[dfCollection['Wine Name'] == wineName, 'Count'].values[0]}")
+    else:
+        from datetime import datetime
+        newEntry = pd.DataFrame({"Wine Name": [wineName], "Count": [1], "Date Added": [datetime.now().strftime("%Y-%m-%d")]})
+        dfCollection = pd.concat([dfCollection, newEntry], ignore_index=True)
+        print(f"Added '{wineName}' to collection")
+    dfCollection.to_csv(collectionFile, index=False)
+    return dfCollection
+
+
+def wordPermutations(query, df, column, targetScore=0.50):
+    from itertools import permutations, combinations
+    words = query.split()
+    _, score = findBestMatch(query, df, column)
+
+    if score >= targetScore:
+        return query, score
+    
+    bestScore = score
+    bestQuery = query
+    tried = set()
+    maxPerms = 20
+    permCount = 0
+
+    for perm in permutations(words):
+        if permCount >= maxPerms:
+            break
+        permCount += 1
+        reordered = " ".join(perm)
+        if reordered in tried:
+            continue
+        tried.add(reordered)
+        bestRow, score = findBestMatch(reordered, df, column)
+        if score >= targetScore:
+            return reordered, score
+        if score > bestScore:
+            bestScore = score
+            bestQuery = reordered
+
+    maxWordsToRemove = min(2, len(words) - 1)
+    for numRemove in range(1, maxWordsToRemove + 1):
+        maxCombos = 10
+        comboCount = 0
+        for combo in combinations(range(len(words)), len(words) - numRemove):
+            if comboCount >= maxCombos:
+                break
+            comboCount += 1
+            remainingWords = [words[i] for i in combo]
+            reducedQuery = " ".join(remainingWords)
+            if reducedQuery in tried:
+                continue
+            tried.add(reducedQuery)
+            bestRow, score = findBestMatch(reducedQuery, df, column)
+            if score >= targetScore:
+                return reducedQuery, score
+            if score > bestScore:
+                bestScore = score
+                bestQuery = reducedQuery
+
+    return bestQuery, bestScore
+
+
+def enhanceText(label):
+    gray = opencv.cvtColor(label, opencv.COLOR_BGR2GRAY)
+    gray = opencv.resize(gray, None, fx=2, fy=2, interpolation=opencv.INTER_CUBIC)
+    gray = opencv.fastNlMeansDenoising(gray, None, 5, 7, 21)
+    clahe = opencv.createCLAHE(clipLimit=2.5, tileGridSize=(8,8))
+    enhanced = clahe.apply(gray)
+
+    gamma = 1.2
+    table = [((i / 255.0) ** (1.0 / gamma)) * 255 for i in range(256)]
+    enhanced = opencv.LUT(enhanced, opencv.UMat(opencv.numpy.array(table, dtype="uint8")))
+    enhanced = opencv.add(enhanced, 5)
+    blurred = opencv.GaussianBlur(enhanced, (0, 0), 1.0)
+    enhanced = opencv.addWeighted(enhanced, 1.1, blurred, -0.1, 0)
+
+    return enhanced
+
+ocrReader = None
+
+def extractTextOcr(label):
+    global ocrReader
+    try:
+        if ocrReader is None:
+            ocrReader = easyocr.Reader(['en', 'es', 'fr'])
+        results = ocrReader.readtext(label)
+        extractedText = []
+        totalConfidence = 0
+        for detection in results:
+            text = detection[1]
+            confidence = detection[2]
+            if confidence > 0.05:
+                extractedText.append(text)
+                totalConfidence += confidence
+        return " ".join(extractedText)
+    except:
+        return "", 0
+
+
+def main():
+    print("Available wine images:")
+    for file in os.listdir("wineImages/"):
+        if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+            print(f"  {file}")
+    print()
+
+    imagePath = "wineImages/" + input("Enter the image file name (e.g., guv.jpg): ").strip()
+    if not imagePath:
+        print("Error: Image file name cannot be empty.")
+        exit(1)
+    if not os.path.exists(imagePath):
+        print(f"Error: File '{imagePath}' not found.")
+        exit(1)
+
+    csvPath = "WineDataset.csv"
+    imageName = os.path.splitext(os.path.basename(imagePath))[0]
+    outputFolder = f"results/{imageName}Results"
+
+    os.makedirs(outputFolder, exist_ok=True)
+    print(f"Created output folder: {outputFolder}\n")
+    img = opencv.imread(imagePath)
+    if img is None:
+        print(f"Error: Could not read image '{imagePath}'")
+        exit(1)
+    print("Processing with optimized strategies...\n")
+
+    opencv.imwrite(f"{outputFolder}/enhanced_image.jpg", enhanceText(img))
+    opencv.imwrite(f"{outputFolder}/original_image.jpg", img)
+
+    df = pd.read_csv(csvPath)
+    columnName = df.columns[0]
+    results = []
+    print("Extracting text from image...")
+    extractedText = extractTextOcr(f"{outputFolder}/enhanced_image.jpg")
+    print(f"Raw extracted text: {extractedText}\n")
+
+    strategies = [
+        ("Permutations", extractedText),
+        ("Filtered", " ".join([w for w in extractedText.split() if len(w) > 2])),
+        ("Capitalized", " ".join(w.capitalize() for w in extractedText.split()))
+    ]
+
+    for i, (name, text) in enumerate(strategies):
+        print(f"Strategy {i+1}: {name}...")
+        bestText, score = wordPermutations(text, df, columnName, targetScore=0.50)
+        bestMatch, finalScore = findBestMatch(bestText, df, columnName)
+        wineName = bestMatch[columnName] if bestMatch is not None else "No match"
+        print(f"  Best text: {bestText}")
+        print(f"  Matched wine: {wineName} (score={finalScore:.2f})\n")
+        results.append((f"Strategy {i+1}: {name}", wineName, finalScore, bestText))
+
+    print("=" * 60)
+    print("WINE MATCH OPTIONS:")
+    print("=" * 60)
+
+    for i, (strategy, wine, score, text) in enumerate(results, 1):
+        print(f"{i}. {strategy}")
+        print(f"   Wine: {wine}")
+        print(f"   Score: {score:.2f}")
+        print(f"   Text: {text}\n")
+
+    bestResult = max(results, key=lambda x: x[2])
+    strategy, wineName, score, text = bestResult
+
+    print("=" * 60)
+    print("SELECTED WINE (Best Match):")
+    print("=" * 60)
+
+    print(f"Wine: {wineName}")
+    print(f"Score: {score:.2f}")
+    print(f"Text: {text}")
+    print(f"Strategy: {strategy}\n")
+
+    isCorrect = input("Is this correct? (y/n): ").strip().lower()
+
+    if isCorrect == 'y':
+        print(f"\n Confirmed: {wineName}")
+        collection = wineCollection(wineName)
+        print(f"\nCurrent Wine Collection:")
+        print(collection.to_string(index=False))
+    else:
+        print(" Incorrect match.")
+        manualWine = input("Please type the correct wine name: ").strip()
+        if manualWine:
+            bestMatch, score = findBestMatch(manualWine, df, columnName)
+
+            if bestMatch is not None and score >= 0.8:
+                datasetWine = bestMatch[columnName]
+                print(f"Found in dataset: '{datasetWine}' (score: {score:.2f})")
+                useDataset = input("Use this wine from dataset? (y/n): ").strip().lower()
+                wineToAdd = datasetWine if useDataset == 'y' else manualWine
+            elif bestMatch is not None and score >= 0.5:
+                datasetWine = bestMatch[columnName]
+                print(f"Did you mean: '{datasetWine}' (score: {score:.2f})?")
+                useSuggestion = input("Use this suggestion? (y/n): ").strip().lower()
+                wineToAdd = datasetWine if useSuggestion == 'y' else manualWine
+            else:
+                print(f"'{manualWine}' not found in dataset. Adding as typed.")
+                wineToAdd = manualWine
+
+            print(f"Adding '{wineToAdd}' to collection...")
+            collection = wineCollection(wineToAdd)
+            print(f"\nCurrent Wine Collection:")
+            print(collection.to_string(index=False))
+
+        else:
+            print("No wine name entered. Skipping collection update.")
+
+    print(f"\nAll results saved to: {outputFolder}/")
+
+
+main()
