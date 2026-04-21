@@ -1,8 +1,13 @@
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.image import Image
+import csv
+import os
 
 
 class BaseScreen(Screen):
@@ -101,6 +106,120 @@ class HomeScreen(Screen):
         self.manager.current = "settings"
 
 
+class SavedWinesScreen(BaseScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(
+            text="Saved Wines",
+            font_size=22,
+            size_hint=(1, 0.08)
+        )
+        layout.add_widget(section_label)
+
+        wine_scroll = ScrollView(
+            size_hint=(1, 0.92)
+        )
+        self.wine_container = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=10,
+            padding=10
+        )
+        self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
+        wine_scroll.add_widget(self.wine_container)
+        layout.add_widget(wine_scroll)
+
+        self.add_widget(layout)
+        self.load_wines()
+
+    def load_wines(self):
+        csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
+        images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
+        
+        if not os.path.exists(csv_path):
+            error_label = Label(text="Wine collection file not found", font_size=16)
+            self.wine_container.add_widget(error_label)
+            return
+        
+        try:
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    wine_card = BoxLayout(
+                        orientation='horizontal',
+                        size_hint_y=None,
+                        height=160,
+                        spacing=10
+                    )
+                    
+                    # Image
+                    image_filename = row.get('Image', '')
+                    image_path = os.path.join(images_dir, image_filename)
+                    
+                    if os.path.exists(image_path):
+                        img = Image(
+                            source=image_path,
+                            size_hint=(0.3, 1)
+                        )
+                        wine_card.add_widget(img)
+                    
+                    # Wine info
+                    info_layout = BoxLayout(
+                        orientation='horizontal',
+                        size_hint=(0.7, 1),
+                        spacing=5
+                    )
+                    
+                    wine_name = Label(
+                        text=row.get('Wine Name', 'Unknown'),
+                        font_size=14,
+                        size_hint_y=None,
+                        height=65,
+                        text_size=(self.width * 0.65, None),
+                        markup=True
+                    )
+                    info_layout.add_widget(wine_name)
+                    
+                    count = Label(
+                        text=f"Count: {row.get('Count', 'N/A')}",
+                        font_size=12,
+                        size_hint_y=None,
+                        height=25
+                    )
+                    info_layout.add_widget(count)
+                    
+                    date_added = Label(
+                        text=f"Added: {row.get('Date Added', 'N/A')}",
+                        font_size=12,
+                        size_hint_y=None,
+                        height=25
+                    )
+                    info_layout.add_widget(date_added)
+                    
+                    most_recent = Label(
+                        text=f"Recent: {row.get('Most Recent', 'N/A')}",
+                        font_size=12,
+                        size_hint_y=None,
+                        height=25
+                    )
+                    info_layout.add_widget(most_recent)
+                    
+                    wine_card.add_widget(info_layout)
+                    self.wine_container.add_widget(wine_card)
+        except Exception as e:
+            error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
+            self.wine_container.add_widget(error_label)
+
+
 class ProfileScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -162,7 +281,7 @@ class ProfileScreen(BaseScreen):
         self.add_widget(layout)
 
     def show_saved_wines(self, instance):
-        self.result_label.text = "Showing saved wines..."
+        self.manager.current = "saved_wines"
 
     def show_favorites(self, instance):
         self.result_label.text = "Showing favorite wines..."
@@ -332,6 +451,7 @@ class WineApp(App):
         sm = ScreenManager()
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(ProfileScreen(name="profile"))
+        sm.add_widget(SavedWinesScreen(name="saved_wines"))
         sm.add_widget(AddWineScreen(name="add_wine"))
         sm.add_widget(RecommendationScreen(name="recommendation"))
         sm.add_widget(SettingsScreen(name="settings"))
