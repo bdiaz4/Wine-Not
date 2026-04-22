@@ -373,10 +373,49 @@ class AddWineScreen(BaseScreen):
         self.add_widget(layout)
 
     def upload_picture(self, instance):
-        self.result_label.text = "Opening wine label upload..."
+        self.clear_widgets()
+
+        layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(text="Wine Images", font_size=22, size_hint=(1, 0.14))
+
+        layout.add_widget(section_label)
+
+        camera_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.1), spacing=10)
+        camera_button = Button(text="Take New Photo", font_size=16)
+        camera_button.bind(on_press=self.take_photo)
+        camera_box.add_widget(camera_button)
+        layout.add_widget(camera_box)
+
+        grid = GridLayout(cols=3, spacing=10, size_hint=(1, 0.6))
+
+        self.selected_label = Label(text="Select an image", font_size=16, size_hint=(1, 0.1))
+
+        image_folder = 'wineImages/'
+
+        if os.path.exists(image_folder):
+            for filename in os.listdir(image_folder):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                    button = Button(
+                        background_normal=os.path.join(image_folder, filename),
+                        size_hint=(None, None),
+                        size=(200, 200)
+                    )
+                    button.bind(on_press=lambda instance, fn=filename: self.select_image(fn))
+                    grid.add_widget(button)
+
+        layout.add_widget(grid)
+        layout.add_widget(self.selected_label)
+
+        self.add_widget(layout)
 
     def add_manually(self, instance):
         self.result_label.text = "Opening manual wine entry..."
+
+    def take_photo(self, instance):
+        self.manager.current = "camera"
 
 
 class CameraScreen(BaseScreen):
