@@ -1,4 +1,4 @@
-Wine Name,Count,Date Added,Most Recent,Image
-"Jim Barry 'The Lodge Hill' Shiraz 2020/21, Clare Valley",8,2026-04-08,2026-04-22,lodge.jpg
-"Vasse Felix 'Filius' Chardonnay 2021/22, Margaret River",4,2026-04-10,2026-04-22,filius.jpg
-"The Guv'nor VIP, Spain",4,2026-04-10,2026-04-22,guv.jpg
+Wine Name,Count,Date Added,Most Recent,Image,Favorite
+"Jim Barry 'The Lodge Hill' Shiraz 2020/21, Clare Valley",8,2026-04-08,2026-04-22,lodge.jpg,False
+"Vasse Felix 'Filius' Chardonnay 2021/22, Margaret River",4,2026-04-10,2026-04-22,filius.jpg,True
+"The Guv'nor VIP, Spain",4,2026-04-10,2026-04-22,guv.jpg,False

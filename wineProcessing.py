@@ -43,7 +43,9 @@ def wineCollection(wineName, imageName=None, collectionFile="wineCollection.csv"
     try:
         dfCollection = pd.read_csv(collectionFile)
     except FileNotFoundError:
-        dfCollection = pd.DataFrame(columns=["Wine Name", "Count", "Date Added", "Most Recent", "Image"])
+        dfCollection = pd.DataFrame(columns=["Wine Name", "Count", "Date Added", "Most Recent", "Image", "Favorite"])
+    if "Favorite" not in dfCollection.columns:
+        dfCollection["Favorite"] = False
     if wineName in dfCollection["Wine Name"].values:
         dfCollection.loc[dfCollection["Wine Name"] == wineName, "Count"] += 1
         recent =  datetime.now().strftime("%Y-%m-%d")
@@ -57,12 +59,31 @@ def wineCollection(wineName, imageName=None, collectionFile="wineCollection.csv"
             "Count": [1], 
             "Date Added": [datetime.now().strftime("%Y-%m-%d")],
             "Most Recent": [datetime.now().strftime("%Y-%m-%d")],
-            "Image": [imageName if imageName else ""]
+            "Image": [imageName if imageName else ""],
+            "Favorite": [False]
         })
         dfCollection = pd.concat([dfCollection, newEntry], ignore_index=True)
         print(f"Added '{wineName}' to collection")
     dfCollection.to_csv(collectionFile, index=False)
     return dfCollection
+
+
+def toggleFavorite(wineName, collectionFile="wineCollection.csv"):
+    try:
+        dfCollection = pd.read_csv(collectionFile)
+    except FileNotFoundError:
+        return False
+    if "Favorite" not in dfCollection.columns:
+        dfCollection["Favorite"] = False
+    else:
+        dfCollection["Favorite"] = dfCollection["Favorite"].astype(bool)
+    if wineName in dfCollection["Wine Name"].values:
+        current = dfCollection.loc[dfCollection["Wine Name"] == wineName, "Favorite"].values[0]
+        new_val = not current
+        dfCollection.loc[dfCollection["Wine Name"] == wineName, "Favorite"] = new_val
+        dfCollection.to_csv(collectionFile, index=False)
+        return new_val
+    return False
 
 
 def wordPermutations(query, df, column, targetScore=0.50):

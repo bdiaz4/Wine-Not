@@ -10,6 +10,8 @@ from kivy.uix.textinput import TextInput
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
 from kivy.lang import Builder
+from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.camera import Camera
 import os
 import time
 import csv
@@ -262,19 +264,166 @@ class SavedWinesScreen(BaseScreen):
                     )
                     info_layout.add_widget(date_added)
                     
-                    most_recent = Label(
-                        text=f"Most Recent: {row.get('Most Recent', 'N/A')}",
-                        font_size=12,
+                    favorite = row.get('Favorite', 'False') == 'True'
+                    favorite_button = ToggleButton(
+                        text="Favorite" if favorite else "Save to Favorites",
+                        font_size=20,
                         size_hint_y=None,
-                        height=25
+                        height=25,
+                        state='down' if favorite else 'normal'
                     )
-                    info_layout.add_widget(most_recent)
+                    favorite_button.wine_name = row.get('Wine Name')
+                    favorite_button.bind(on_press=self.toggle_favorite)
+                    info_layout.add_widget(favorite_button)
                     
                     wine_card.add_widget(info_layout)
                     self.wine_container.add_widget(wine_card)
         except Exception as e:
             error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
             self.wine_container.add_widget(error_label)
+
+    def toggle_favorite(self, instance):
+        from wineProcessing import toggleFavorite
+        is_fav = toggleFavorite(instance.wine_name)
+        instance.text = "Favorite" if is_fav else "Save to Favorites"
+        instance.state = 'down' if is_fav else 'normal'
+
+
+class FavoritesScreen(BaseScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(
+            text="Favorite Wines",
+            font_size=22,
+            size_hint=(1, 0.08)
+        )
+        layout.add_widget(section_label)
+
+        wine_scroll = ScrollView(
+            size_hint=(1, 0.92)
+        )
+        self.wine_container = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=10,
+            padding=10
+        )
+        self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
+        wine_scroll.add_widget(self.wine_container)
+        layout.add_widget(wine_scroll)
+
+        self.add_widget(layout)
+
+    def on_enter(self):
+        self.load_wines()
+
+    def load_wines(self):
+        self.wine_container.clear_widgets()
+        csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
+        images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
+        
+        if not os.path.exists(csv_path):
+            error_label = Label(text="Wine collection file not found", font_size=16)
+            self.wine_container.add_widget(error_label)
+            return
+        
+        try:
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                favorites = [row for row in reader if row.get('Favorite', 'False') == 'True']
+                for row in favorites:
+                    wine_card = BoxLayout(
+                        orientation='horizontal',
+                        size_hint_y=None,
+                        height=160,
+                        spacing=10
+                    )
+                    
+                    # Image
+                    image_filename = row.get('Image', '')
+                    image_path = os.path.join(images_dir, image_filename)
+                    
+                    if os.path.exists(image_path):
+                        img = Image(
+                            source=image_path,
+                            size_hint=(None, 1),
+                            width=120
+                        )
+                        wine_card.add_widget(img)
+                    
+                    # Wine info
+                    info_layout = BoxLayout(
+                        orientation='horizontal',
+                        size_hint=(1, 1),
+                        spacing=5,
+                        padding=(15, 5, 5, 5)
+                    )
+                    
+                    wine_name = Label(
+                        text=row.get('Wine Name', 'Unknown'),
+                        font_size=14,
+                        size_hint_y=None,
+                        height=65,
+                        text_size=(240, None),
+                        markup=True,
+                        halign='left',
+                        valign='top'
+                    )
+                    info_layout.add_widget(wine_name)
+                    
+                    count = Label(
+                        text=f"Count: {row.get('Count', 'N/A')}",
+                        font_size=12,
+                        size_hint_y=None,
+                        height=25
+                    )
+                    info_layout.add_widget(count)
+                    
+                    date_added = Label(
+                        text=f"Date Added: {row.get('Date Added', 'N/A')}",
+                        font_size=12,
+                        size_hint_y=None,
+                        height=25
+                    )
+                    info_layout.add_widget(date_added)
+                    
+                    favorite = True  # since it's favorites screen
+                    favorite_button = ToggleButton(
+                        text="Favorite" if favorite else "Save to Favorites",
+                        font_size=20,
+                        size_hint_y=None,
+                        height=25,
+                        state='down' if favorite else 'normal'
+                    )
+                    favorite_button.wine_name = row.get('Wine Name')
+                    favorite_button.bind(on_press=self.toggle_favorite)
+                    info_layout.add_widget(favorite_button)
+                    
+                    wine_card.add_widget(info_layout)
+                    self.wine_container.add_widget(wine_card)
+        except Exception as e:
+            error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
+            self.wine_container.add_widget(error_label)
+
+    def toggle_favorite(self, instance):
+        from wineProcessing import toggleFavorite
+        is_fav = toggleFavorite(instance.wine_name)
+        instance.text = "Favorite" if is_fav else "Save to Favorites"
+        instance.state = 'down' if is_fav else 'normal'
+        # If no longer favorite, remove from this screen
+        if not is_fav:
+            # Find the parent card and remove it
+            card = instance.parent.parent
+            self.wine_container.remove_widget(card)
 
 
 class ProfileScreen(BaseScreen):
@@ -341,7 +490,7 @@ class ProfileScreen(BaseScreen):
         self.manager.current = "saved_wines"
 
     def show_favorites(self, instance):
-        self.result_label.text = "Showing favorite wines..."
+        self.manager.current = "favorites"
 
     def show_recent(self, instance):
         self.result_label.text = "Showing recently saved wines..."
@@ -660,6 +809,7 @@ class WineApp(App):
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(ProfileScreen(name="profile"))
         sm.add_widget(SavedWinesScreen(name="saved_wines"))
+        sm.add_widget(FavoritesScreen(name="favorites"))
         sm.add_widget(AddWineScreen(name="add_wine"))
         sm.add_widget(CameraScreen(name="camera"))
         sm.add_widget(RecommendationScreen(name="recommendation"))
