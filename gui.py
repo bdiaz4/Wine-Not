@@ -189,9 +189,12 @@ class SavedWinesScreen(BaseScreen):
         layout.add_widget(wine_scroll)
 
         self.add_widget(layout)
+
+    def on_enter(self):
         self.load_wines()
 
     def load_wines(self):
+        self.wine_container.clear_widgets()
         csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
         images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
         
@@ -218,15 +221,17 @@ class SavedWinesScreen(BaseScreen):
                     if os.path.exists(image_path):
                         img = Image(
                             source=image_path,
-                            size_hint=(0.3, 1)
+                            size_hint=(None, 1),
+                            width=120
                         )
                         wine_card.add_widget(img)
                     
                     # Wine info
                     info_layout = BoxLayout(
                         orientation='horizontal',
-                        size_hint=(0.7, 1),
-                        spacing=5
+                        size_hint=(1, 1),
+                        spacing=5,
+                        padding=(15, 5, 5, 5)
                     )
                     
                     wine_name = Label(
@@ -234,8 +239,10 @@ class SavedWinesScreen(BaseScreen):
                         font_size=14,
                         size_hint_y=None,
                         height=65,
-                        text_size=(self.width * 0.65, None),
-                        markup=True
+                        text_size=(240, None),
+                        markup=True,
+                        halign='left',
+                        valign='top'
                     )
                     info_layout.add_widget(wine_name)
                     
