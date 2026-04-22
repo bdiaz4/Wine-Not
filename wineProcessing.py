@@ -40,7 +40,10 @@ def findBestMatch(query, df, column):
 
 def wineCollection(wineName, imageName=None, collectionFile="wineCollection.csv"):
     from datetime import datetime
-    dfCollection = pd.read_csv(collectionFile)
+    try:
+        dfCollection = pd.read_csv(collectionFile)
+    except FileNotFoundError:
+        dfCollection = pd.DataFrame(columns=["Wine Name", "Count", "Date Added", "Most Recent", "Image"])
     if wineName in dfCollection["Wine Name"].values:
         dfCollection.loc[dfCollection["Wine Name"] == wineName, "Count"] += 1
         recent =  datetime.now().strftime("%Y-%m-%d")
@@ -151,6 +154,61 @@ def extractTextOcr(label):
         return "", 0
 
 
+def process_wine_image(image_path):
+    try:
+        csvPath = "WineDataset.csv"
+        df = pd.read_csv(csvPath)
+    except FileNotFoundError:
+        return {'matched': False, 'error': 'Wine dataset file not found'}
+    columnName = df.columns[0]
+    imageName = os.path.splitext(os.path.basename(image_path))[0]
+    outputFolder = f"results/{imageName}Results"
+
+    os.makedirs(outputFolder, exist_ok=True)
+    img = opencv.imread(image_path)
+    if img is None:
+        return {'matched': False, 'error': 'Could not read image'}
+
+    opencv.imwrite(f"{outputFolder}/enhanced_image.jpg", enhanceText(img))
+    opencv.imwrite(f"{outputFolder}/original_image.jpg", img)
+
+    extractedText = extractTextOcr(f"{outputFolder}/enhanced_image.jpg")
+
+    strategies = [
+        ("Permutations", extractedText),
+        ("Filtered", " ".join([w for w in extractedText.split() if len(w) > 2])),
+        ("Capitalized", " ".join(w.capitalize() for w in extractedText.split()))
+    ]
+
+    bestScore = 0
+    bestWine = None
+    bestText = ""
+    for name, text in strategies:
+        current_best_text, score = wordPermutations(text, df, columnName, targetScore=0.50)
+        if score > bestScore:
+            bestScore = score
+            bestText = current_best_text
+            bestMatch, _ = findBestMatch(bestText, df, columnName)
+            if bestMatch is not None:
+                bestWine = bestMatch[columnName]
+
+    if bestScore >= 0.5:
+        return {
+            'matched': True,
+            'wine_name': bestWine,
+            'score': bestScore,
+            'extracted_text': extractedText,
+            'best_text': bestText
+        }
+    else:
+        return {
+            'matched': False,
+            'extracted_text': extractedText,
+            'best_text': bestText,
+            'score': bestScore
+        }
+
+
 def main():
     print("Available wine images:")
     for file in os.listdir("wineImages/"):
@@ -166,101 +224,21 @@ def main():
         print(f"Error: File '{imagePath}' not found.")
         exit(1)
 
-    csvPath = "WineDataset.csv"
-    imageName = os.path.splitext(os.path.basename(imagePath))[0]
-    outputFolder = f"results/{imageName}Results"
-
-    os.makedirs(outputFolder, exist_ok=True)
-    print(f"Created output folder: {outputFolder}\n")
-    img = opencv.imread(imagePath)
-    if img is None:
-        print(f"Error: Could not read image '{imagePath}'")
-        exit(1)
-    print("Processing with optimized strategies...\n")
-
-    opencv.imwrite(f"{outputFolder}/enhanced_image.jpg", enhanceText(img))
-    opencv.imwrite(f"{outputFolder}/original_image.jpg", img)
-
-    df = pd.read_csv(csvPath)
-    columnName = df.columns[0]
-    results = []
-    print("Extracting text from image...")
-    extractedText = extractTextOcr(f"{outputFolder}/enhanced_image.jpg")
-    print(f"Raw extracted text: {extractedText}\n")
-
-    strategies = [
-        ("Permutations", extractedText),
-        ("Filtered", " ".join([w for w in extractedText.split() if len(w) > 2])),
-        ("Capitalized", " ".join(w.capitalize() for w in extractedText.split()))
-    ]
-
-    for i, (name, text) in enumerate(strategies):
-        print(f"Strategy {i+1}: {name}...")
-        bestText, score = wordPermutations(text, df, columnName, targetScore=0.50)
-        bestMatch, finalScore = findBestMatch(bestText, df, columnName)
-        wineName = bestMatch[columnName] if bestMatch is not None else "No match"
-        print(f"  Best text: {bestText}")
-        print(f"  Matched wine: {wineName} (score={finalScore:.2f})\n")
-        results.append((f"Strategy {i+1}: {name}", wineName, finalScore, bestText))
-
-    print("=" * 60)
-    print("WINE MATCH OPTIONS:")
-    print("=" * 60)
-
-    for i, (strategy, wine, score, text) in enumerate(results, 1):
-        print(f"{i}. {strategy}")
-        print(f"   Wine: {wine}")
-        print(f"   Score: {score:.2f}")
-        print(f"   Text: {text}\n")
-
-    bestResult = max(results, key=lambda x: x[2])
-    strategy, wineName, score, text = bestResult
-
-    print("=" * 60)
-    print("SELECTED WINE (Best Match):")
-    print("=" * 60)
-
-    print(f"Wine: {wineName}")
-    print(f"Score: {score:.2f}")
-    print(f"Text: {text}")
-    print(f"Strategy: {strategy}\n")
-
-    isCorrect = input("Is this correct? (y/n): ").strip().lower()
-
-    if isCorrect == 'y':
-        print(f"\n Confirmed: {wineName}")
-        collection = wineCollection(wineName, f"{imageName}.jpg")
+    wine_result = process_wine_image(imagePath)
+    if wine_result['matched']:
+        print(f"Matched wine: {wine_result['wine_name']}")
+        print(f"Score: {wine_result['score']:.2f}")
+        print(f"Extracted Text: {wine_result['extracted_text']}")
+        print(f"Best Text: {wine_result['best_text']}")
+        collection = wineCollection(wine_result['wine_name'], os.path.basename(imagePath))
         print(f"\nCurrent Wine Collection:")
         print(collection.to_string(index=False))
     else:
-        print(" Incorrect match.")
-        manualWine = input("Please type the correct wine name: ").strip()
-        if manualWine:
-            bestMatch, score = findBestMatch(manualWine, df, columnName)
-
-            if bestMatch is not None and score >= 0.8:
-                datasetWine = bestMatch[columnName]
-                print(f"Found in dataset: '{datasetWine}' (score: {score:.2f})")
-                useDataset = input("Use this wine from dataset? (y/n): ").strip().lower()
-                wineToAdd = datasetWine if useDataset == 'y' else manualWine
-            elif bestMatch is not None and score >= 0.5:
-                datasetWine = bestMatch[columnName]
-                print(f"Did you mean: '{datasetWine}' (score: {score:.2f})?")
-                useSuggestion = input("Use this suggestion? (y/n): ").strip().lower()
-                wineToAdd = datasetWine if useSuggestion == 'y' else manualWine
-            else:
-                print(f"'{manualWine}' not found in dataset. Adding as typed.")
-                wineToAdd = manualWine
-
-            print(f"Adding '{wineToAdd}' to collection...")
-            collection = wineCollection(wineToAdd)
-            print(f"\nCurrent Wine Collection:")
-            print(collection.to_string(index=False))
-
-        else:
-            print("No wine name entered. Skipping collection update.")
-
-    print(f"\nAll results saved to: {outputFolder}/")
+        print("Could not identify wine from image.")
+        print(f"Extracted Text: {wine_result.get('extracted_text', '')}")
+        print(f"Best Text: {wine_result.get('best_text', '')}")
+        print(f"Score: {wine_result.get('score', 0):.2f}")
 
 
-main()
+if __name__ == "__main__":
+    main()

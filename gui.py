@@ -6,11 +6,14 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.image import Image
-from kivy.uix.camera import Camera
+from kivy.uix.textinput import TextInput
+from kivy.clock import Clock
+from kivy.uix.popup import Popup
 from kivy.lang import Builder
-import csv
 import os
 import time
+import csv
+import threading
 Builder.load_string('''
 <CameraClick>:
     orientation: 'vertical'
@@ -424,7 +427,99 @@ class AddWineScreen(BaseScreen):
         self.add_widget(layout)
 
     def add_manually(self, instance):
-        self.result_label.text = "Opening manual wine entry..."
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+        content.add_widget(Label(text="Enter Wine Name:", font_size=16))
+        wine_input = TextInput(multiline=False, size_hint_y=None, height=40)
+        content.add_widget(wine_input)
+        
+        buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
+        
+        def on_add(instance):
+            wine_name = wine_input.text.strip()
+            if wine_name:
+                from wineProcessing import wineCollection
+                wineCollection(wine_name)
+                self.result_label.text = f"Added '{wine_name}' manually"
+                popup.dismiss()
+            else:
+                self.result_label.text = "Wine name cannot be empty"
+        
+        add_button = Button(text='Add Wine')
+        add_button.bind(on_press=on_add)
+        buttons.add_widget(add_button)
+        
+        cancel_button = Button(text='Cancel')
+        cancel_button.bind(on_press=lambda x: popup.dismiss())
+        buttons.add_widget(cancel_button)
+        
+        content.add_widget(buttons)
+        
+        popup = Popup(title='Add Wine Manually', content=content, size_hint=(0.8, 0.4))
+        popup.open()
+
+    def select_image(self, filename):
+        Clock.schedule_once(lambda dt: self.do_process_image(filename), 0.1)
+
+    def do_process_image(self, filename):
+        self.loading_popup = Popup(title='Processing', content=Label(text='Processing image...\nPlease wait while we analyze the wine label.'), size_hint=(0.6, 0.4), auto_dismiss=False)
+        self.loading_popup.open()
+        
+        image_path = os.path.join('wineImages', filename)
+        
+        def process_thread():
+            from wineProcessing import process_wine_image
+            result = process_wine_image(image_path)
+            Clock.schedule_once(lambda dt: self.show_result(result, filename), 0)
+        
+        threading.Thread(target=process_thread).start()
+
+    def show_result(self, result, filename):
+        self.loading_popup.dismiss()
+        
+        from wineProcessing import wineCollection
+        
+        if result['matched']:
+            content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+            content.add_widget(Label(text=f"Extracted Text: {result['extracted_text']}", font_size=14))
+            content.add_widget(Label(text=f"Best Match Text: {result['best_text']}", font_size=14))
+            content.add_widget(Label(text=f"Matched Wine: {result['wine_name']}", font_size=16, bold=True))
+            content.add_widget(Label(text=f"Confidence Score: {result['score']:.2f}", font_size=14))
+            
+            buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
+            
+            def on_confirm(instance):
+                wineCollection(result['wine_name'], filename)
+                self.selected_label.text = f"Added {result['wine_name']} to collection"
+                popup.dismiss()
+            
+            confirm_button = Button(text='Add to Collection', size_hint_x=0.5)
+            confirm_button.bind(on_press=on_confirm)
+            buttons.add_widget(confirm_button)
+            
+            cancel_button = Button(text='Cancel', size_hint_x=0.5)
+            cancel_button.bind(on_press=lambda x: popup.dismiss())
+            buttons.add_widget(cancel_button)
+            
+            content.add_widget(buttons)
+            
+            popup = Popup(title='Wine Processing Result', content=content, size_hint=(0.9, 0.7))
+            popup.open()
+        else:
+            content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+            if 'error' in result:
+                content.add_widget(Label(text=result['error'], font_size=16))
+            else:
+                content.add_widget(Label(text="Could not identify wine from image", font_size=16))
+                content.add_widget(Label(text=f"Extracted Text: {result.get('extracted_text', '')}", font_size=14))
+                content.add_widget(Label(text=f"Best Attempt: {result.get('best_text', '')}", font_size=14))
+                content.add_widget(Label(text=f"Score: {result.get('score', 0):.2f}", font_size=14))
+            
+            close_button = Button(text='Close', size_hint_y=None, height=50)
+            close_button.bind(on_press=lambda x: popup.dismiss())
+            content.add_widget(close_button)
+            
+            popup = Popup(title='Processing Failed', content=content, size_hint=(0.8, 0.6))
+            popup.open()
 
     def take_photo(self, instance):
         self.manager.current = "camera"
