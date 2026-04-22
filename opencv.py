@@ -38,14 +38,24 @@ def findBestMatch(query, df, column):
     return bestRow, bestScore
 
 
-def wineCollection(wineName, collectionFile="wineCollection.csv"):
+def wineCollection(wineName, imageName=None, collectionFile="wineCollection.csv"):
+    from datetime import datetime
     dfCollection = pd.read_csv(collectionFile)
     if wineName in dfCollection["Wine Name"].values:
         dfCollection.loc[dfCollection["Wine Name"] == wineName, "Count"] += 1
+        recent =  datetime.now().strftime("%Y-%m-%d")
+        dfCollection.loc[dfCollection["Wine Name"] == wineName, "Most Recent"] = recent
+        if imageName:
+            dfCollection.loc[dfCollection["Wine Name"] == wineName, "Image"] = imageName
         print(f"Updated '{wineName}' - New count: {dfCollection.loc[dfCollection['Wine Name'] == wineName, 'Count'].values[0]}")
     else:
-        from datetime import datetime
-        newEntry = pd.DataFrame({"Wine Name": [wineName], "Count": [1], "Date Added": [datetime.now().strftime("%Y-%m-%d")]})
+        newEntry = pd.DataFrame({
+            "Wine Name": [wineName], 
+            "Count": [1], 
+            "Date Added": [datetime.now().strftime("%Y-%m-%d")],
+            "Most Recent": [datetime.now().strftime("%Y-%m-%d")],
+            "Image": [imageName if imageName else ""]
+        })
         dfCollection = pd.concat([dfCollection, newEntry], ignore_index=True)
         print(f"Added '{wineName}' to collection")
     dfCollection.to_csv(collectionFile, index=False)
@@ -219,7 +229,7 @@ def main():
 
     if isCorrect == 'y':
         print(f"\n Confirmed: {wineName}")
-        collection = wineCollection(wineName)
+        collection = wineCollection(wineName, f"{imageName}.jpg")
         print(f"\nCurrent Wine Collection:")
         print(collection.to_string(index=False))
     else:
