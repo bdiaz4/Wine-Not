@@ -14,17 +14,13 @@ import time
 Builder.load_string('''
 <CameraClick>:
     orientation: 'vertical'
-    Camera:
-        id: camera
-        resolution: (640, 480)
-        play: False
     BoxLayout:
         size_hint_y: None
         height: '48dp'
         spacing: 10
         ToggleButton:
             text: 'Play'
-            on_press: camera.play = not camera.play
+            on_press: root.toggle_play()
             size_hint: 0.5, 1
         Button:
             text: 'Capture'
@@ -33,17 +29,33 @@ Builder.load_string('''
 ''')
 
 class CameraClick(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        try:
+            self.camera = Camera(resolution=(640, 480), play=False)
+            self.add_widget(self.camera)
+        except Exception as e:
+            self.camera = None
+            no_camera_label = Label(text="No camera available", font_size=18)
+            self.add_widget(no_camera_label)
+
+    def toggle_play(self):
+        if self.camera:
+            self.camera.play = not self.camera.play
+
     def capture(self):
-        camera = self.ids['camera']
-        timestr = time.strftime("%Y%m%d_%H%M%S")
-        wine_images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
-        os.makedirs(wine_images_dir, exist_ok=True)
-        filepath = os.path.join(wine_images_dir, f"wine_{timestr}.jpg")
-        camera.export_to_png(filepath)
-        print(f"Captured: {filepath}")
-        # Return to add wine screen
-        app = App.get_running_app()
-        app.root.current = "add_wine"
+        if self.camera:
+            timestr = time.strftime("%Y%m%d_%H%M%S")
+            wine_images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
+            os.makedirs(wine_images_dir, exist_ok=True)
+            filepath = os.path.join(wine_images_dir, f"wine_{timestr}.png")  # Changed to png since export_to_png
+            self.camera.export_to_png(filepath)
+            print(f"Captured: {filepath}")
+            # Return to add wine screen
+            app = App.get_running_app()
+            app.root.current = "add_wine"
+        else:
+            print("No camera available for capture")
 
 class BaseScreen(Screen):
     def go_home(self, instance):
