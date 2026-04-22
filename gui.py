@@ -6,9 +6,44 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.image import Image
+from kivy.uix.camera import Camera
+from kivy.lang import Builder
 import csv
 import os
+import time
+Builder.load_string('''
+<CameraClick>:
+    orientation: 'vertical'
+    Camera:
+        id: camera
+        resolution: (640, 480)
+        play: False
+    BoxLayout:
+        size_hint_y: None
+        height: '48dp'
+        spacing: 10
+        ToggleButton:
+            text: 'Play'
+            on_press: camera.play = not camera.play
+            size_hint: 0.5, 1
+        Button:
+            text: 'Capture'
+            on_press: root.capture()
+            size_hint: 0.5, 1
+''')
 
+class CameraClick(BoxLayout):
+    def capture(self):
+        camera = self.ids['camera']
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+        wine_images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
+        os.makedirs(wine_images_dir, exist_ok=True)
+        filepath = os.path.join(wine_images_dir, f"wine_{timestr}.jpg")
+        camera.export_to_png(filepath)
+        print(f"Captured: {filepath}")
+        # Return to add wine screen
+        app = App.get_running_app()
+        app.root.current = "add_wine"
 
 class BaseScreen(Screen):
     def go_home(self, instance):
@@ -198,7 +233,7 @@ class SavedWinesScreen(BaseScreen):
                     info_layout.add_widget(count)
                     
                     date_added = Label(
-                        text=f"Added: {row.get('Date Added', 'N/A')}",
+                        text=f"Date Added: {row.get('Date Added', 'N/A')}",
                         font_size=12,
                         size_hint_y=None,
                         height=25
@@ -206,7 +241,7 @@ class SavedWinesScreen(BaseScreen):
                     info_layout.add_widget(date_added)
                     
                     most_recent = Label(
-                        text=f"Recent: {row.get('Most Recent', 'N/A')}",
+                        text=f"Most Recent: {row.get('Most Recent', 'N/A')}",
                         font_size=12,
                         size_hint_y=None,
                         height=25
@@ -344,6 +379,26 @@ class AddWineScreen(BaseScreen):
         self.result_label.text = "Opening manual wine entry..."
 
 
+class CameraScreen(BaseScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        layout.add_widget(self.create_header())
+        
+        camera_click = CameraClick()
+        layout.add_widget(camera_click)
+        
+        cancel_button = Button(text="Cancel", size_hint_y=None, height='48dp')
+        cancel_button.bind(on_press=self.cancel_camera)
+        layout.add_widget(cancel_button)
+        
+        self.add_widget(layout)
+    
+    def cancel_camera(self, instance):
+        self.manager.current = "add_wine"
+
+
 class RecommendationScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -453,6 +508,7 @@ class WineApp(App):
         sm.add_widget(ProfileScreen(name="profile"))
         sm.add_widget(SavedWinesScreen(name="saved_wines"))
         sm.add_widget(AddWineScreen(name="add_wine"))
+        sm.add_widget(CameraScreen(name="camera"))
         sm.add_widget(RecommendationScreen(name="recommendation"))
         sm.add_widget(SettingsScreen(name="settings"))
         return sm
