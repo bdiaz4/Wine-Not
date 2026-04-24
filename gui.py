@@ -542,8 +542,16 @@ class AddWineScreen(BaseScreen):
         layout.add_widget(self.result_label)
 
         self.add_widget(layout)
+        self.main_layout = layout
+        self.in_upload_mode = False
+
+    def on_enter(self):
+        # Refresh the image grid if we were in upload mode and returned from camera
+        if self.in_upload_mode:
+            self.refresh_image_grid()
 
     def upload_picture(self, instance):
+        self.in_upload_mode = True
         self.clear_widgets()
 
         layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
@@ -560,10 +568,21 @@ class AddWineScreen(BaseScreen):
         camera_box.add_widget(camera_button)
         layout.add_widget(camera_box)
 
-        grid = GridLayout(cols=3, spacing=10, size_hint=(1, 0.6))
+        self.grid = GridLayout(cols=3, spacing=10, size_hint=(1, 0.6))
 
         self.selected_label = Label(text="Select an image", font_size=16, size_hint=(1, 0.1))
 
+        self.populate_image_grid()
+        
+        layout.add_widget(self.grid)
+        layout.add_widget(self.selected_label)
+
+        self.add_widget(layout)
+
+    def populate_image_grid(self):
+        """Populate the image grid with images from wineImages folder"""
+        self.grid.clear_widgets()
+        
         image_folder = 'wineImages/'
 
         if os.path.exists(image_folder):
@@ -575,12 +594,12 @@ class AddWineScreen(BaseScreen):
                         size=(200, 200)
                     )
                     button.bind(on_press=lambda instance, fn=filename: self.select_image(fn))
-                    grid.add_widget(button)
+                    self.grid.add_widget(button)
 
-        layout.add_widget(grid)
-        layout.add_widget(self.selected_label)
-
-        self.add_widget(layout)
+    def refresh_image_grid(self):
+        """Refresh the image grid to show newly captured photos"""
+        if self.in_upload_mode and hasattr(self, 'grid'):
+            self.populate_image_grid()
 
     def add_manually(self, instance):
         content = BoxLayout(orientation='vertical', spacing=10, padding=10)
