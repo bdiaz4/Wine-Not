@@ -50,15 +50,28 @@ class CameraClick(BoxLayout):
 
     def capture(self):
         if self.camera:
-            timestr = time.strftime("%Y%m%d_%H%M%S")
-            wine_images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
-            os.makedirs(wine_images_dir, exist_ok=True)
-            filepath = os.path.join(wine_images_dir, f"wine_{timestr}.png")  # Changed to png since export_to_png
-            self.camera.export_to_png(filepath)
-            print(f"Captured: {filepath}")
-            # Return to add wine screen
-            app = App.get_running_app()
-            app.root.current = "add_wine"
+            def on_ok(instance):
+                filename = textinput.text.strip()
+                if not filename:
+                    filename = time.strftime("%Y%m%d_%H%M%S")
+                wine_images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
+                os.makedirs(wine_images_dir, exist_ok=True)
+                filepath = os.path.join(wine_images_dir, f"{filename}.png")
+                self.camera.export_to_png(filepath)
+                print(f"Captured: {filepath}")
+                # Return to add wine screen
+                app = App.get_running_app()
+                app.root.current = "add_wine"
+                popup.dismiss()
+
+            textinput = TextInput(text=time.strftime("%Y%m%d_%H%M%S"), multiline=False)
+            button = Button(text='OK', size_hint_y=None, height=50)
+            button.bind(on_press=on_ok)
+            content = BoxLayout(orientation='vertical')
+            content.add_widget(textinput)
+            content.add_widget(button)
+            popup = Popup(title='Enter filename', content=content, size_hint=(0.8, 0.4))
+            popup.open()
         else:
             print("No camera available for capture")
 
