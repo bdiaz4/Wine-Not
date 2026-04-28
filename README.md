@@ -9,3 +9,12 @@ A mobile app written in Python. Upload a picture of a wine bottle or a whole win
 `pip install easyocr`
 
 `pip install kivy`
+
+## How to Run
+###### Make sure before you start you have installed the required libraries
+
+`git clone https://github.com/bdiaz4/Wine-Not`
+
+`cd Wine-Not`
+
+`python gui.py`
