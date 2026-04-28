@@ -86,6 +86,41 @@ def toggleFavorite(wineName, collectionFile="wineCollection.csv"):
     return False
 
 
+def updateWine(oldName, newName, newAmount, collectionFile="wineCollection.csv"):
+    """Update a wine's name and/or amount in the collection"""
+    try:
+        dfCollection = pd.read_csv(collectionFile)
+    except FileNotFoundError:
+        return False
+    
+    if oldName in dfCollection["Wine Name"].values:
+        if newName != oldName and newName in dfCollection["Wine Name"].values:
+            print(f"Wine '{newName}' already exists in collection")
+            return False
+        
+        dfCollection.loc[dfCollection["Wine Name"] == oldName, "Wine Name"] = newName
+        dfCollection.loc[dfCollection["Wine Name"] == newName, "Count"] = int(newAmount)
+        dfCollection.to_csv(collectionFile, index=False)
+        print(f"Updated '{oldName}' to '{newName}' with count {newAmount}")
+        return True
+    return False
+
+
+def deleteWine(wineName, collectionFile="wineCollection.csv"):
+    """Delete a wine from the collection"""
+    try:
+        dfCollection = pd.read_csv(collectionFile)
+    except FileNotFoundError:
+        return False
+    
+    if wineName in dfCollection["Wine Name"].values:
+        dfCollection = dfCollection[dfCollection["Wine Name"] != wineName]
+        dfCollection.to_csv(collectionFile, index=False)
+        print(f"Deleted '{wineName}' from collection")
+        return True
+    return False
+
+
 def wordPermutations(query, df, column, targetScore=0.50):
     from itertools import permutations, combinations
     words = query.split()

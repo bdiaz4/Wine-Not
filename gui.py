@@ -16,6 +16,7 @@ import os
 import time
 import csv
 import threading
+from datetime import datetime
 Builder.load_string('''
 <CameraClick>:
     orientation: 'vertical'
@@ -506,10 +507,10 @@ class ProfileScreen(BaseScreen):
         self.manager.current = "favorites"
 
     def show_recent(self, instance):
-        self.result_label.text = "Showing recently saved wines..."
+        self.manager.current = "recently_saved"
 
     def edit_profile(self, instance):
-        self.result_label.text = "Opening edit profile..."
+        self.manager.current = "edit_profile"
 
 
 class AddWineScreen(BaseScreen):
@@ -627,6 +628,8 @@ class AddWineScreen(BaseScreen):
             if wine_name:
                 from wineProcessing import wineCollection
                 wineCollection(wine_name)
+                app = App.get_running_app()
+                app.add_recent_wine(wine_name)
                 self.result_label.text = f"Added '{wine_name}' manually"
                 popup.dismiss()
             else:
@@ -677,6 +680,8 @@ class AddWineScreen(BaseScreen):
             
             def on_confirm(instance):
                 wineCollection(result['wine_name'], filename)
+                app = App.get_running_app()
+                app.add_recent_wine(result['wine_name'], filename)
                 self.selected_label.text = f"Added {result['wine_name']} to collection"
                 popup.dismiss()
             
@@ -731,6 +736,315 @@ class CameraScreen(BaseScreen):
     
     def cancel_camera(self, instance):
         self.manager.current = "add_wine"
+
+
+class RecentlySavedScreen(BaseScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(
+            text="Recently Saved",
+            font_size=22,
+            size_hint=(1, 0.08)
+        )
+        layout.add_widget(section_label)
+
+        wine_scroll = ScrollView(
+            size_hint=(1, 0.92)
+        )
+        self.wine_container = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=10,
+            padding=10
+        )
+        self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
+        wine_scroll.add_widget(self.wine_container)
+        layout.add_widget(wine_scroll)
+
+        self.add_widget(layout)
+
+    def on_enter(self):
+        self.load_recent_wines()
+
+    def load_recent_wines(self):
+        self.wine_container.clear_widgets()
+        app = App.get_running_app()
+        
+        if not app.recently_saved_wines:
+            empty_label = Label(text="No wines saved in this session yet", font_size=16)
+            self.wine_container.add_widget(empty_label)
+            return
+        
+        # Sort by timestamp (most recent first)
+        sorted_wines = sorted(app.recently_saved_wines, key=lambda x: x['timestamp'], reverse=True)
+        
+        current_time = time.time()
+        
+        for wine_data in sorted_wines:
+            minutes_ago = int((current_time - wine_data['timestamp']) / 60)
+            if minutes_ago == 0:
+                time_str = "Just now"
+            elif minutes_ago == 1:
+                time_str = "1 minute ago"
+            else:
+                time_str = f"{minutes_ago} minutes ago"
+            
+            wine_card = BoxLayout(
+                orientation='horizontal',
+                size_hint_y=None,
+                height=100,
+                spacing=10
+            )
+            
+            # Image
+            image_filename = wine_data.get('image', '')
+            if image_filename:
+                images_dir = os.path.join(os.path.dirname(__file__), 'wineImages')
+                image_path = os.path.join(images_dir, image_filename)
+                
+                if os.path.exists(image_path):
+                    img = Image(
+                        source=image_path,
+                        size_hint=(None, 1),
+                        width=80
+                    )
+                    wine_card.add_widget(img)
+            
+            # Wine info
+            info_layout = BoxLayout(
+                orientation='vertical',
+                size_hint=(1, 1),
+                spacing=5,
+                padding=(10, 5, 5, 5)
+            )
+            
+            wine_name = Label(
+                text=wine_data.get('name', 'Unknown'),
+                font_size=14,
+                size_hint_y=None,
+                height=35,
+                text_size=(240, None),
+                markup=True,
+                halign='left',
+                valign='top'
+            )
+            info_layout.add_widget(wine_name)
+            
+            time_label = Label(
+                text=time_str,
+                font_size=12,
+                size_hint_y=None,
+                height=25,
+                color=(0.7, 0.7, 0.7, 1)
+            )
+            info_layout.add_widget(time_label)
+            
+            wine_card.add_widget(info_layout)
+            self.wine_container.add_widget(wine_card)
+
+
+class EditProfileScreen(BaseScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(
+            text="Edit Wines",
+            font_size=22,
+            size_hint=(1, 0.08)
+        )
+        layout.add_widget(section_label)
+
+        wine_scroll = ScrollView(
+            size_hint=(1, 0.92)
+        )
+        self.wine_container = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=10,
+            padding=10
+        )
+        self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
+        wine_scroll.add_widget(self.wine_container)
+        layout.add_widget(wine_scroll)
+
+        self.add_widget(layout)
+
+    def on_enter(self):
+        self.load_wines()
+
+    def load_wines(self):
+        self.wine_container.clear_widgets()
+        csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
+        
+        if not os.path.exists(csv_path):
+            error_label = Label(text="Wine collection file not found", font_size=16)
+            self.wine_container.add_widget(error_label)
+            return
+        
+        try:
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    wine_card = BoxLayout(
+                        orientation='horizontal',
+                        size_hint_y=None,
+                        height=80,
+                        spacing=10
+                    )
+                    
+                    # Wine info
+                    info_layout = BoxLayout(
+                        orientation='vertical',
+                        size_hint=(0.6, 1),
+                        spacing=5,
+                        padding=(10, 5, 5, 5)
+                    )
+                    
+                    wine_name = Label(
+                        text=row.get('Wine Name', 'Unknown'),
+                        font_size=13,
+                        size_hint_y=None,
+                        height=35,
+                        text_size=(200, None),
+                        markup=True,
+                        halign='left',
+                        valign='top'
+                    )
+                    info_layout.add_widget(wine_name)
+                    
+                    count = Label(
+                        text=f"Count: {row.get('Count', '0')}",
+                        font_size=11,
+                        size_hint_y=None,
+                        height=25
+                    )
+                    info_layout.add_widget(count)
+                    
+                    wine_card.add_widget(info_layout)
+                    
+                    # Buttons
+                    buttons_layout = BoxLayout(
+                        orientation='horizontal',
+                        size_hint=(0.4, 1),
+                        spacing=5
+                    )
+                    
+                    edit_button = Button(
+                        text='Edit',
+                        font_size=11,
+                        size_hint_x=0.5
+                    )
+                    edit_button.wine_name = row.get('Wine Name')
+                    edit_button.wine_row = row
+                    edit_button.bind(on_press=self.on_edit_wine)
+                    buttons_layout.add_widget(edit_button)
+                    
+                    delete_button = Button(
+                        text='Delete',
+                        font_size=11,
+                        size_hint_x=0.5,
+                        background_color=(1, 0.5, 0.5, 1)
+                    )
+                    delete_button.wine_name = row.get('Wine Name')
+                    delete_button.bind(on_press=self.on_delete_wine)
+                    buttons_layout.add_widget(delete_button)
+                    
+                    wine_card.add_widget(buttons_layout)
+                    self.wine_container.add_widget(wine_card)
+        except Exception as e:
+            error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
+            self.wine_container.add_widget(error_label)
+
+    def on_edit_wine(self, instance):
+        wine_name = instance.wine_name
+        wine_row = instance.wine_row
+        
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+        
+        # Rename section
+        content.add_widget(Label(text="Rename Wine:", font_size=14, size_hint_y=None, height=30))
+        rename_input = TextInput(text=wine_name, multiline=False, size_hint_y=None, height=40)
+        content.add_widget(rename_input)
+        
+        # Amount section
+        content.add_widget(Label(text="Amount:", font_size=14, size_hint_y=None, height=30))
+        amount_input = TextInput(text=wine_row.get('Count', '0'), multiline=False, size_hint_y=None, height=40, input_filter='int')
+        content.add_widget(amount_input)
+        
+        # Buttons
+        buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
+        
+        def on_save(instance):
+            new_name = rename_input.text.strip()
+            new_amount = amount_input.text.strip()
+            
+            if not new_name:
+                new_name = wine_name
+            if not new_amount:
+                new_amount = wine_row.get('Count', '0')
+            
+            from wineProcessing import updateWine
+            updateWine(wine_name, new_name, new_amount)
+            self.load_wines()
+            popup.dismiss()
+        
+        save_button = Button(text='Save')
+        save_button.bind(on_press=on_save)
+        buttons.add_widget(save_button)
+        
+        cancel_button = Button(text='Cancel')
+        cancel_button.bind(on_press=lambda x: popup.dismiss())
+        buttons.add_widget(cancel_button)
+        
+        content.add_widget(buttons)
+        
+        popup = Popup(title=f'Edit Wine: {wine_name}', content=content, size_hint=(0.85, 0.7))
+        popup.open()
+
+    def on_delete_wine(self, instance):
+        wine_name = instance.wine_name
+        
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+        content.add_widget(Label(text=f"Delete '{wine_name}'?", font_size=16))
+        content.add_widget(Label(text="This action cannot be undone.", font_size=12))
+        
+        buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
+        
+        def on_confirm(instance):
+            from wineProcessing import deleteWine
+            deleteWine(wine_name)
+            self.load_wines()
+            popup.dismiss()
+        
+        confirm_button = Button(text='Delete', background_color=(1, 0.5, 0.5, 1))
+        confirm_button.bind(on_press=on_confirm)
+        buttons.add_widget(confirm_button)
+        
+        cancel_button = Button(text='Cancel')
+        cancel_button.bind(on_press=lambda x: popup.dismiss())
+        buttons.add_widget(cancel_button)
+        
+        content.add_widget(buttons)
+        
+        popup = Popup(title='Confirm Delete', content=content, size_hint=(0.8, 0.5))
+        popup.open()
 
 
 class RecommendationScreen(BaseScreen):
@@ -836,12 +1150,26 @@ class SettingsScreen(BaseScreen):
 
 
 class WineApp(App):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.recently_saved_wines = []
+    
+    def add_recent_wine(self, wine_name, image_filename=''):
+        """Add a wine to the recently saved list"""
+        self.recently_saved_wines.append({
+            'name': wine_name,
+            'image': image_filename,
+            'timestamp': time.time()
+        })
+    
     def build(self):
         sm = ScreenManager()
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(ProfileScreen(name="profile"))
         sm.add_widget(SavedWinesScreen(name="saved_wines"))
         sm.add_widget(FavoritesScreen(name="favorites"))
+        sm.add_widget(RecentlySavedScreen(name="recently_saved"))
+        sm.add_widget(EditProfileScreen(name="edit_profile"))
         sm.add_widget(AddWineScreen(name="add_wine"))
         sm.add_widget(CameraScreen(name="camera"))
         sm.add_widget(RecommendationScreen(name="recommendation"))
