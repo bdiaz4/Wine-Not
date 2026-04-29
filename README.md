@@ -21,13 +21,17 @@ A mobile app written in Python. Upload a picture of a wine bottle or a whole win
 
 ## Pytests
 
-Required Libaries
+### Required Libaries
 
 `pip install pytest`
 
 `pip install pytest-trio`
 
 `pip install pytest-kivy`
+### Setup VSCode
+1. Python: Configure Tests
+2. pytest framework
+3. Directory: wineImages
 
 Results of the pytests after running `test_gui.py`
 
