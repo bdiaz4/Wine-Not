@@ -18,3 +18,9 @@ A mobile app written in Python. Upload a picture of a wine bottle or a whole win
 `cd Wine-Not`
 
 `python gui.py`
+
+## Pytests
+
+Results of the pytests after running `test_gui.py`
+
+![pytest](pytestResults.png)
