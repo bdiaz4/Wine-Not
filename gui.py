@@ -12,10 +12,12 @@ from kivy.uix.popup import Popup
 from kivy.lang import Builder
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.camera import Camera
+from kivy.uix.spinner import Spinner
 import os
 import time
 import csv
 import threading
+import pandas as pd
 from datetime import datetime
 Builder.load_string('''
 <CameraClick>:
@@ -491,6 +493,22 @@ class ProfileScreen(BaseScreen):
         edit_button.bind(on_press=self.edit_profile)
         layout.add_widget(edit_button)
 
+        preferences_button = Button(
+            text="My Preferences",
+            font_size=18,
+            size_hint=(1, 0.14)
+        )
+        preferences_button.bind(on_press=self.my_preferences)
+        layout.add_widget(preferences_button)
+
+        user_profile_button = Button(
+            text="User Profile",
+            font_size=18,
+            size_hint=(1, 0.2)
+        )
+        user_profile_button.bind(on_press=self.user_profile)
+        layout.add_widget(user_profile_button)
+
         self.result_label = Label(
             text="Profile options will appear here",
             font_size=16,
@@ -511,6 +529,12 @@ class ProfileScreen(BaseScreen):
 
     def edit_profile(self, instance):
         self.manager.current = "edit_profile"
+
+    def my_preferences(self, instance):
+        self.manager.current = "my_preferences"
+
+    def user_profile(self, instance):
+        self.manager.current = "user_profile"
 
 
 class AddWineScreen(BaseScreen):
@@ -1098,6 +1122,271 @@ class RecommendationScreen(BaseScreen):
         self.result_label.text = "Opening chat assistant..."
 
 
+class PreferencesScreen(BaseScreen):
+    """Screen for selecting wine preferences"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.category_spinners = {}
+        self.options = self.load_preferences_data()
+        
+        layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
+        layout.add_widget(self.create_header())
+        
+        section_label = Label(text="My Preferences", font_size=22, size_hint=(1, 0.08))
+        layout.add_widget(section_label)
+        
+        scroll = ScrollView(size_hint=(1, 0.92))
+        scroll_layout = BoxLayout(orientation='vertical', size_hint_y=None, spacing=10, padding=10)
+        scroll_layout.bind(minimum_height=scroll_layout.setter('height'))
+        
+        categories = ['Types', 'Country', 'Characteristics', 'ABV', 'Region', 'Style']
+        
+        for category in categories:
+            cat_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=60, spacing=10)
+            
+            spinner = Spinner(
+                text=f"Select {category}",
+                values=self.options.get(category, []),
+                size_hint=(0.7, 1)
+            )
+            self.category_spinners[category] = spinner
+            cat_layout.add_widget(spinner)
+            
+            plus_btn = Button(text="+", size_hint=(0.3, 1))
+            plus_btn.category = category
+            plus_btn.bind(on_press=self.add_preference)
+            cat_layout.add_widget(plus_btn)
+            
+            scroll_layout.add_widget(cat_layout)
+        
+        scroll.add_widget(scroll_layout)
+        layout.add_widget(scroll)
+        self.add_widget(layout)
+    
+    def load_preferences_data(self):
+        """Parse wine info notes.txt to get all preferences"""
+        options = {
+            'Types': [],
+            'Country': [],
+            'Characteristics': [],
+            'ABV': [],
+            'Region': [],
+            'Style': []
+        }
+        
+        try:
+            with open('wine info notes.txt', 'r',encoding='utf-8') as content:
+                line= content.readline().strip()
+                while line:
+                    if not line:
+                        continue
+                    # Check if this is a category header
+                    for cat in options.keys():
+                        if line.startswith(f"{cat}["):
+                            current_category = cat
+                            # Extract values from bracket
+                            values_str = line[len(cat)+1:line.rfind(']')]
+                            if values_str:
+                                # Parse the list
+                                values = [v.strip().strip("'\"") for v in values_str.split(',')]
+                                options[cat] = values
+                            break
+                    line= content.readline().strip()
+            
+            return options
+        except Exception as e:
+            print(f"Error loading preferences: {e}")
+            return options
+    
+    def add_preference(self, instance):
+        """Add selected preference to myProfile.csv"""
+        category = instance.category
+        spinner = self.category_spinners[category]
+        selected_value = spinner.text
+        
+        if selected_value == f"Select {category}":
+            popup = Popup(title='Error', content=Label(text=f'Please select a {category}'), size_hint=(0.6, 0.3))
+            popup.open()
+            return
+        
+        # Add to myProfile.csv
+        profile_path = 'myProfile.csv'
+        
+        try:
+            # Read existing data
+            if os.path.exists(profile_path):
+                df = pd.read_csv(profile_path)
+            else:
+                df = pd.DataFrame(columns=['Types', 'Country', 'Characteristics', 'ABV', 'Region', 'Style'])
+            
+            # Ensure empty strings instead of NaN
+            df = df.fillna('')
+            empty_row_index = None
+
+            for idx, row in df.iterrows():
+                if row[category] == '':
+                    empty_row_index = idx
+                    break
+
+            if empty_row_index is not None:
+                #fill existing row if exist
+                df.at[empty_row_index, category] = selected_value
+            else:
+                #create new row
+                new_row = {col: '' for col in df.columns}
+                new_row[category] = selected_value
+                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+            df.to_csv(profile_path, index=False)
+            
+            # Reset spinner
+            spinner.text = f"Select {category}"
+            
+            # Show confirmation
+            popup = Popup(title='Added', content=Label(text=f'{selected_value} added to preferences'), size_hint=(0.6, 0.3))
+            popup.open()
+            
+        except Exception as e:
+            popup = Popup(title='Error', content=Label(text=f'Error saving preference: {str(e)}'), size_hint=(0.6, 0.3))
+            popup.open()
+
+
+class UserProfileScreen(BaseScreen):
+    """Screen to display saved user preferences"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
+        layout.add_widget(self.create_header())
+        
+        section_label = Label(text="User Profile", font_size=22, size_hint=(1, 0.08))
+        layout.add_widget(section_label)
+        
+        scroll = ScrollView(size_hint=(1, 0.85))
+        self.profile_layout = BoxLayout(orientation='vertical', size_hint_y=None, spacing=10, padding=10)
+        self.profile_layout.bind(minimum_height=self.profile_layout.setter('height'))
+        scroll.add_widget(self.profile_layout)
+        layout.add_widget(scroll)
+        
+        clear_btn = Button(text="Clear All Preferences", size_hint=(1, 0.07), background_color=(1, 0.5, 0.5, 1))
+        clear_btn.bind(on_press=self.clear_preferences)
+        layout.add_widget(clear_btn)
+        
+        self.add_widget(layout)
+    
+    def on_enter(self):
+        self.load_profile_data()
+    
+    def load_profile_data(self):
+        """Load and display preferences from myProfile.csv"""
+        self.profile_layout.clear_widgets()
+        
+        profile_path = 'myProfile.csv'
+        
+        if not os.path.exists(profile_path):
+            empty_label = Label(text="No preferences saved yet", font_size=16)
+            self.profile_layout.add_widget(empty_label)
+            return
+        
+        try:
+            df = pd.read_csv(profile_path)
+            
+            if df.empty:
+                empty_label = Label(text="No preferences saved yet", font_size=16)
+                self.profile_layout.add_widget(empty_label)
+                return
+            
+            # Display preferences grouped by category
+            for col in df.columns:
+                # Get all non-empty values for this category
+                values = df[col].dropna()
+                values = [str(v) for v in values if str(v).strip() != '']
+
+                if values:
+                    pref_layout = BoxLayout(
+                        orientation='horizontal',
+                        size_hint_y=None,
+                        height=50,
+                        spacing=10
+                    )
+
+                    # Join all values into one line
+                    pref_text = f"{col}: " + ", ".join(values)
+
+                    pref_label = Label(
+                        text=pref_text,
+                        font_size=12,
+                        size_hint=(0.8, 1)
+                    )
+                    pref_layout.add_widget(pref_label)
+
+                    # Optional: delete button per category (clears whole column)
+                    delete_btn = Button(
+                        text="X",
+                        size_hint=(0.2, 1),
+                        background_color=(1, 0.5, 0.5, 1)
+                    )
+                    delete_btn.category = col
+                    delete_btn.bind(on_press=self.delete_preference)
+                    pref_layout.add_widget(delete_btn)
+
+                    self.profile_layout.add_widget(pref_layout)
+        
+        except Exception as e:
+            error_label = Label(text=f"Error loading profile: {str(e)}", font_size=14)
+            self.profile_layout.add_widget(error_label)
+    
+    def delete_preference(self, instance):
+        """Delete a specific preference"""
+        category = instance.category
+        profile_path = 'myProfile.csv'
+        
+        try:
+            df = pd.read_csv(profile_path)
+            df[category] = ''  # clear column
+            df.to_csv(profile_path, index=False)
+            self.load_profile_data()
+        except Exception as e:
+            popup = Popup(title='Error', content=Label(text=f'Error deleting preference: {str(e)}'), size_hint=(0.6, 0.3))
+            popup.open()
+    
+    def clear_preferences(self, instance):
+        """Clear all preferences"""
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+        content.add_widget(Label(text="Clear all preferences?", font_size=16))
+        content.add_widget(Label(text="This action cannot be undone.", font_size=12))
+        
+        buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
+        
+        def confirm_clear(inst):
+            profile_path = 'myProfile.csv'
+            try:
+                df = pd.read_csv(profile_path)
+                df = df.iloc[0:0]  # Clear all rows
+                df.to_csv(profile_path, index=False)
+                popup.dismiss()
+                self.load_profile_data()
+            except Exception as e:
+                popup.dismiss()
+                error_popup = Popup(title='Error', content=Label(text=f'Error clearing: {str(e)}'), size_hint=(0.6, 0.3))
+                error_popup.open()
+        
+        confirm_btn = Button(text='Clear')
+        confirm_btn.bind(on_press=confirm_clear)
+        buttons.add_widget(confirm_btn)
+        
+        cancel_btn = Button(text='Cancel')
+        buttons.add_widget(cancel_btn)
+        
+        content.add_widget(buttons)
+        
+        popup = Popup(title='Confirm Clear', content=content, size_hint=(0.8, 0.5))
+        cancel_btn.bind(on_press=popup.dismiss)
+        popup.open()
+
+
 class SettingsScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1170,6 +1459,10 @@ class WineApp(App):
         sm.add_widget(FavoritesScreen(name="favorites"))
         sm.add_widget(RecentlySavedScreen(name="recently_saved"))
         sm.add_widget(EditProfileScreen(name="edit_profile"))
+
+        sm.add_widget(PreferencesScreen(name="my_preferences"))
+        sm.add_widget(UserProfileScreen(name="user_profile"))
+
         sm.add_widget(AddWineScreen(name="add_wine"))
         sm.add_widget(CameraScreen(name="camera"))
         sm.add_widget(RecommendationScreen(name="recommendation"))
