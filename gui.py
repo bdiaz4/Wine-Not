@@ -83,27 +83,23 @@ class BaseScreen(Screen):
         self.manager.current = "home"
 
     def create_header(self):
-        app = App.get_running_app()
         header = BoxLayout(orientation='vertical', size_hint=(1, 0.2), spacing=5)
 
-        self.title_button = Button(
+        title_button = Button(
             text="Wine Not?",
             font_size=28,
-            size_hint=(1, 0.65),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.65)
         )
-        self.title_button.bind(on_press=self.go_home)
-        header.add_widget(self.title_button)
+        title_button.bind(on_press=self.go_home)
 
-        self.subtitle = Label(
+        subtitle = Label(
             text="Tap title to return home",
             font_size=14,
-            size_hint=(1, 0.35),
-            color=app.theme['text']
+            size_hint=(1, 0.35)
         )
-        header.add_widget(self.subtitle)
 
+        header.add_widget(title_button)
+        header.add_widget(subtitle)
         return header
 
 
@@ -111,96 +107,59 @@ class HomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=15
         )
 
-        self.title = Label(
+        title = Label(
             text="Wine Not?",
             font_size=30,
-            size_hint=(1, 0.2),
-            color=app.theme['text']
+            size_hint=(1, 0.2)
         )
-        self.layout.add_widget(self.title)
+        layout.add_widget(title)
 
-        self.subtitle = Label(
+        subtitle = Label(
             text="Your personal wine assistant",
             font_size=16,
-            size_hint=(1, 0.1),
-            color=app.theme['text']
+            size_hint=(1, 0.1)
         )
-        self.layout.add_widget(self.subtitle)
+        layout.add_widget(subtitle)
 
-        self.profile_button = Button(
+        profile_button = Button(
             text="My Profile",
             font_size=20,
-            size_hint=(1, 0.17),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.17)
         )
-        self.profile_button.bind(on_press=self.go_profile)
-        self.layout.add_widget(self.profile_button)
+        profile_button.bind(on_press=self.go_profile)
+        layout.add_widget(profile_button)
 
-        self.add_wine_button = Button(
+        add_wine_button = Button(
             text="Add Wine",
             font_size=20,
-            size_hint=(1, 0.17),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.17)
         )
-        self.add_wine_button.bind(on_press=self.go_add_wine)
-        self.layout.add_widget(self.add_wine_button)
+        add_wine_button.bind(on_press=self.go_add_wine)
+        layout.add_widget(add_wine_button)
 
-        self.recommend_button = Button(
+        recommend_button = Button(
             text="Get Recommendation",
             font_size=20,
-            size_hint=(1, 0.17),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.17)
         )
-        self.recommend_button.bind(on_press=self.go_recommendation)
-        self.layout.add_widget(self.recommend_button)
+        recommend_button.bind(on_press=self.go_recommendation)
+        layout.add_widget(recommend_button)
 
-        self.settings_button = Button(
+        settings_button = Button(
             text="Settings",
             font_size=20,
-            size_hint=(1, 0.17),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.17)
         )
-        self.settings_button.bind(on_press=self.go_settings)
-        self.layout.add_widget(self.settings_button)
+        settings_button.bind(on_press=self.go_settings)
+        layout.add_widget(settings_button)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update widgets
-        self.title.color = app.theme['text']
-        self.subtitle.color = app.theme['text']
-        for button in [self.profile_button, self.add_wine_button, self.recommend_button, self.settings_button]:
-            button.color = app.theme['text']
-            button.background_color = app.theme['box']
+        self.add_widget(layout)
 
     def go_profile(self, instance):
         self.manager.current = "profile"
@@ -219,23 +178,20 @@ class SavedWinesScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="Saved Wines",
             font_size=22,
-            size_hint=(1, 0.08),
-            color=app.theme['text']
+            size_hint=(1, 0.08)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
         wine_scroll = ScrollView(
             size_hint=(1, 0.92)
@@ -248,40 +204,64 @@ class SavedWinesScreen(BaseScreen):
         )
         self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
         wine_scroll.add_widget(self.wine_container)
-        self.layout.add_widget(wine_scroll)
+        layout.add_widget(wine_scroll)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        # Note: wine_container items are dynamic and not updated here
+        self.add_widget(layout)
 
     def on_enter(self):
         self.load_wines()
+
+    def get_wine_from_dataset(self, wine_name):
+        """Lookup wine data from WineDataset.csv"""
+        try:
+            dataset_path = os.path.join(os.path.dirname(__file__), 'WineDataset.csv')
+            df = pd.read_csv(dataset_path)
+            
+            # Search for wine in dataset
+            for _, row in df.iterrows():
+                if str(row['Title']).lower() == wine_name.lower():
+                    return {
+                        "Wine Name": row['Title'],
+                        "Types": row.get('Type', 'N/A'),
+                        "Country": row.get('Country', 'N/A'),
+                        "Characteristics": row.get('Characteristics', 'N/A'),
+                        "ABV": row.get('ABV', 'N/A'),
+                        "Region": row.get('Region', 'N/A') if pd.notna(row.get('Region', None)) else "N/A",
+                        "Style": row.get('Style', 'N/A') if pd.notna(row.get('Style', None)) else "N/A"
+                    }
+            
+            # If exact match not found, try partial match
+            from wineMatching import findBestMatch
+            best_row, score = findBestMatch(wine_name, df, 'Title')
+            if best_row is not None and score >= 0.35:
+                return {
+                    "Wine Name": best_row['Title'],
+                    "Types": best_row.get('Type', 'N/A'),
+                    "Country": best_row.get('Country', 'N/A'),
+                    "Characteristics": best_row.get('Characteristics', 'N/A'),
+                    "ABV": best_row.get('ABV', 'N/A'),
+                    "Region": best_row.get('Region', 'N/A') if pd.notna(best_row.get('Region', None)) else "N/A",
+                    "Style": best_row.get('Style', 'N/A') if pd.notna(best_row.get('Style', None)) else "N/A"
+                }
+        except Exception as e:
+            print(f"Error looking up wine: {e}")
+        
+        return None
+
+    def show_wine_details(self, wine_name):
+        """Navigate to wine details screen for clicked wine"""
+        wine_data = self.get_wine_from_dataset(wine_name)
+        if wine_data:
+            app = App.get_running_app()
+            app.selected_wine = wine_data
+            self.manager.current = "wine_details"
+        else:
+            popup = Popup(
+                title='Wine Not Found',
+                content=Label(text=f"Could not find details for '{wine_name}'"),
+                size_hint=(0.7, 0.3)
+            )
+            popup.open()
 
     def load_wines(self):
         self.wine_container.clear_widgets()
@@ -318,44 +298,53 @@ class SavedWinesScreen(BaseScreen):
                     
                     # Wine info
                     info_layout = BoxLayout(
-                        orientation='horizontal',
+                        orientation='vertical',
                         size_hint=(1, 1),
                         spacing=5,
                         padding=(15, 5, 5, 5)
                     )
                     
-                    wine_name = Label(
+                    # Wine name as clickable button
+                    wine_name_btn = Button(
                         text=row.get('Wine Name', 'Unknown'),
                         font_size=14,
                         size_hint_y=None,
                         height=65,
-                        text_size=(240, None),
-                        markup=True,
-                        halign='left',
-                        valign='top'
+                        background_color=(0.2, 0.5, 0.8, 1)
                     )
-                    info_layout.add_widget(wine_name)
+                    wine_name_btn.wine_name = row.get('Wine Name', 'Unknown')
+                    wine_name_btn.bind(on_press=lambda btn: self.show_wine_details(btn.wine_name))
+                    info_layout.add_widget(wine_name_btn)
+                    
+                    # Metadata layout
+                    metadata_layout = BoxLayout(
+                        orientation='horizontal',
+                        size_hint=(1, None),
+                        height=25,
+                        spacing=5
+                    )
                     
                     count = Label(
                         text=f"Count: {row.get('Count', 'N/A')}",
                         font_size=12,
-                        size_hint_y=None,
-                        height=25
+                        size_hint_x=0.3
                     )
-                    info_layout.add_widget(count)
+                    metadata_layout.add_widget(count)
                     
                     date_added = Label(
                         text=f"Date Added: {row.get('Date Added', 'N/A')}",
                         font_size=12,
-                        size_hint_y=None,
-                        height=25
+                        size_hint_x=0.4
                     )
-                    info_layout.add_widget(date_added)
+                    metadata_layout.add_widget(date_added)
                     
+                    info_layout.add_widget(metadata_layout)
+                    
+                    # Favorite button
                     favorite = row.get('Favorite', 'False') == 'True'
                     favorite_button = ToggleButton(
                         text="Favorite" if favorite else "Save to Favorites",
-                        font_size=20,
+                        font_size=10,
                         size_hint_y=None,
                         height=25,
                         state='down' if favorite else 'normal'
@@ -381,23 +370,20 @@ class FavoritesScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="Favorite Wines",
             font_size=22,
-            size_hint=(1, 0.08),
-            color=app.theme['text']
+            size_hint=(1, 0.08)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
         wine_scroll = ScrollView(
             size_hint=(1, 0.92)
@@ -410,40 +396,64 @@ class FavoritesScreen(BaseScreen):
         )
         self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
         wine_scroll.add_widget(self.wine_container)
-        self.layout.add_widget(wine_scroll)
+        layout.add_widget(wine_scroll)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        # Note: wine_container items are dynamic and not updated here
+        self.add_widget(layout)
 
     def on_enter(self):
         self.load_wines()
+
+    def get_wine_from_dataset(self, wine_name):
+        """Lookup wine data from WineDataset.csv"""
+        try:
+            dataset_path = os.path.join(os.path.dirname(__file__), 'WineDataset.csv')
+            df = pd.read_csv(dataset_path)
+            
+            # Search for wine in dataset
+            for _, row in df.iterrows():
+                if str(row['Title']).lower() == wine_name.lower():
+                    return {
+                        "Wine Name": row['Title'],
+                        "Types": row.get('Type', 'N/A'),
+                        "Country": row.get('Country', 'N/A'),
+                        "Characteristics": row.get('Characteristics', 'N/A'),
+                        "ABV": row.get('ABV', 'N/A'),
+                        "Region": row.get('Region', 'N/A') if pd.notna(row.get('Region', None)) else "N/A",
+                        "Style": row.get('Style', 'N/A') if pd.notna(row.get('Style', None)) else "N/A"
+                    }
+            
+            # If exact match not found, try partial match
+            from wineMatching import findBestMatch
+            best_row, score = findBestMatch(wine_name, df, 'Title')
+            if best_row is not None and score >= 0.35:
+                return {
+                    "Wine Name": best_row['Title'],
+                    "Types": best_row.get('Type', 'N/A'),
+                    "Country": best_row.get('Country', 'N/A'),
+                    "Characteristics": best_row.get('Characteristics', 'N/A'),
+                    "ABV": best_row.get('ABV', 'N/A'),
+                    "Region": best_row.get('Region', 'N/A') if pd.notna(best_row.get('Region', None)) else "N/A",
+                    "Style": best_row.get('Style', 'N/A') if pd.notna(best_row.get('Style', None)) else "N/A"
+                }
+        except Exception as e:
+            print(f"Error looking up wine: {e}")
+        
+        return None
+
+    def show_wine_details(self, wine_name):
+        """Navigate to wine details screen for clicked wine"""
+        wine_data = self.get_wine_from_dataset(wine_name)
+        if wine_data:
+            app = App.get_running_app()
+            app.selected_wine = wine_data
+            self.manager.current = "wine_details"
+        else:
+            popup = Popup(
+                title='Wine Not Found',
+                content=Label(text=f"Could not find details for '{wine_name}'"),
+                size_hint=(0.7, 0.3)
+            )
+            popup.open()
 
     def load_wines(self):
         self.wine_container.clear_widgets()
@@ -481,44 +491,52 @@ class FavoritesScreen(BaseScreen):
                     
                     # Wine info
                     info_layout = BoxLayout(
-                        orientation='horizontal',
+                        orientation='vertical',
                         size_hint=(1, 1),
                         spacing=5,
                         padding=(15, 5, 5, 5)
                     )
                     
-                    wine_name = Label(
+                    # Wine name as clickable button
+                    wine_name_btn = Button(
                         text=row.get('Wine Name', 'Unknown'),
                         font_size=14,
                         size_hint_y=None,
                         height=65,
-                        text_size=(240, None),
-                        markup=True,
-                        halign='left',
-                        valign='top'
+                        background_color=(0.2, 0.5, 0.8, 1)
                     )
-                    info_layout.add_widget(wine_name)
+                    wine_name_btn.wine_name = row.get('Wine Name', 'Unknown')
+                    wine_name_btn.bind(on_press=lambda btn: self.show_wine_details(btn.wine_name))
+                    info_layout.add_widget(wine_name_btn)
+                    
+                    # Metadata layout
+                    metadata_layout = BoxLayout(
+                        orientation='horizontal',
+                        size_hint=(1, None),
+                        height=25,
+                        spacing=5
+                    )
                     
                     count = Label(
                         text=f"Count: {row.get('Count', 'N/A')}",
                         font_size=12,
-                        size_hint_y=None,
-                        height=25
+                        size_hint_x=0.3
                     )
-                    info_layout.add_widget(count)
+                    metadata_layout.add_widget(count)
                     
                     date_added = Label(
                         text=f"Date Added: {row.get('Date Added', 'N/A')}",
                         font_size=12,
-                        size_hint_y=None,
-                        height=25
+                        size_hint_x=0.4
                     )
-                    info_layout.add_widget(date_added)
+                    metadata_layout.add_widget(date_added)
+                    
+                    info_layout.add_widget(metadata_layout)
                     
                     favorite = True  # since it's favorites screen
                     favorite_button = ToggleButton(
                         text="Favorite" if favorite else "Save to Favorites",
-                        font_size=20,
+                        font_size=10,
                         size_hint_y=None,
                         height=25,
                         state='down' if favorite else 'normal'
@@ -549,124 +567,77 @@ class ProfileScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="My Profile",
             font_size=22,
-            size_hint=(1, 0.12),
-            color=app.theme['text']
+            size_hint=(1, 0.12)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
-        self.saved_button = Button(
+        saved_button = Button(
             text="Saved Wines",
             font_size=18,
-            size_hint=(1, 0.14),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.saved_button.bind(on_press=self.show_saved_wines)
-        self.layout.add_widget(self.saved_button)
+        saved_button.bind(on_press=self.show_saved_wines)
+        layout.add_widget(saved_button)
 
-        self.favorites_button = Button(
+        favorites_button = Button(
             text="Favorites",
             font_size=18,
-            size_hint=(1, 0.14),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.favorites_button.bind(on_press=self.show_favorites)
-        self.layout.add_widget(self.favorites_button)
+        favorites_button.bind(on_press=self.show_favorites)
+        layout.add_widget(favorites_button)
 
-        self.recent_button = Button(
+        recent_button = Button(
             text="Recently Saved",
             font_size=18,
-            size_hint=(1, 0.14),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.recent_button.bind(on_press=self.show_recent)
-        self.layout.add_widget(self.recent_button)
+        recent_button.bind(on_press=self.show_recent)
+        layout.add_widget(recent_button)
 
-        self.edit_button = Button(
+        edit_button = Button(
             text="Edit Profile",
             font_size=18,
-            size_hint=(1, 0.14),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.edit_button.bind(on_press=self.edit_profile)
-        self.layout.add_widget(self.edit_button)
+        edit_button.bind(on_press=self.edit_profile)
+        layout.add_widget(edit_button)
 
-        self.preferences_button = Button(
+        preferences_button = Button(
             text="My Preferences",
             font_size=18,
-            size_hint=(1, 0.14),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.preferences_button.bind(on_press=self.my_preferences)
-        self.layout.add_widget(self.preferences_button)
+        preferences_button.bind(on_press=self.my_preferences)
+        layout.add_widget(preferences_button)
 
-        self.user_profile_button = Button(
+        user_profile_button = Button(
             text="User Profile",
             font_size=18,
-            size_hint=(1, 0.2),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.user_profile_button.bind(on_press=self.user_profile)
-        self.layout.add_widget(self.user_profile_button)
+        user_profile_button.bind(on_press=self.user_profile)
+        layout.add_widget(user_profile_button)
 
         self.result_label = Label(
             text="Profile options will appear here",
             font_size=16,
-            size_hint=(1, 0.2),
-            color=app.theme['text']
+            size_hint=(1, 0.1)
         )
-        self.layout.add_widget(self.result_label)
+        layout.add_widget(self.result_label)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        self.result_label.color = app.theme['text']
-        for button in [self.saved_button, self.favorites_button, self.recent_button, self.edit_button, self.preferences_button, self.user_profile_button]:
-            button.color = app.theme['text']
-            button.background_color = app.theme['box']
+        self.add_widget(layout)
 
     def show_saved_wines(self, instance):
         self.manager.current = "saved_wines"
@@ -691,87 +662,47 @@ class AddWineScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="Add Wine",
             font_size=22,
-            size_hint=(1, 0.14),
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
-        self.upload_button = Button(
+        upload_button = Button(
             text="Upload Picture",
             font_size=18,
-            size_hint=(1, 0.18),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.18)
         )
-        self.upload_button.bind(on_press=self.upload_picture)
-        self.layout.add_widget(self.upload_button)
+        upload_button.bind(on_press=self.upload_picture)
+        layout.add_widget(upload_button)
 
-        self.manual_button = Button(
+        manual_button = Button(
             text="Add Manually",
             font_size=18,
-            size_hint=(1, 0.18),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.18)
         )
-        self.manual_button.bind(on_press=self.add_manually)
-        self.layout.add_widget(self.manual_button)
+        manual_button.bind(on_press=self.add_manually)
+        layout.add_widget(manual_button)
 
         self.result_label = Label(
             text="Choose how to add a wine",
             font_size=16,
-            size_hint=(1, 0.25),
-            color=app.theme['text']
+            size_hint=(1, 0.25)
         )
-        self.layout.add_widget(self.result_label)
+        layout.add_widget(self.result_label)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-        self.main_layout = self.layout
+        self.add_widget(layout)
+        self.main_layout = layout
         self.in_upload_mode = False
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        self.result_label.color = app.theme['text']
-        for button in [self.upload_button, self.manual_button]:
-            button.color = app.theme['text']
-            button.background_color = app.theme['box']
 
     def on_enter(self):
         # Refresh the image grid if we were in upload mode and returned from camera
@@ -956,23 +887,20 @@ class RecentlySavedScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="Recently Saved",
             font_size=22,
-            size_hint=(1, 0.08),
-            color=app.theme['text']
+            size_hint=(1, 0.08)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
         wine_scroll = ScrollView(
             size_hint=(1, 0.92)
@@ -985,37 +913,9 @@ class RecentlySavedScreen(BaseScreen):
         )
         self.wine_container.bind(minimum_height=self.wine_container.setter('height'))
         wine_scroll.add_widget(self.wine_container)
-        self.layout.add_widget(wine_scroll)
+        layout.add_widget(wine_scroll)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        # Note: wine_container items are dynamic and not updated here
+        self.add_widget(layout)
 
     def on_enter(self):
         self.load_recent_wines()
@@ -1100,7 +1000,6 @@ class RecentlySavedScreen(BaseScreen):
 class EditProfileScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        app = App.get_running_app()
 
         layout = BoxLayout(
             orientation='vertical',
@@ -1131,18 +1030,6 @@ class EditProfileScreen(BaseScreen):
         layout.add_widget(wine_scroll)
 
         self.add_widget(layout)
-
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-    
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
 
     def on_enter(self):
         self.load_wines()
@@ -1303,117 +1190,150 @@ class EditProfileScreen(BaseScreen):
         
         popup = Popup(title='Confirm Delete', content=content, size_hint=(0.8, 0.5))
         popup.open()
-    
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Note: wine_container items are dynamic and not updated here
-
 
 
 class RecommendationScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="Get Recommendation",
             font_size=22,
-            size_hint=(1, 0.14),
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
-        self.upload_menu_button = Button(
+        upload_menu_button = Button(
             text="Upload Menu",
             font_size=18,
-            size_hint=(1, 0.18),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.18)
         )
-        self.upload_menu_button.bind(on_press=self.upload_menu)
-        self.layout.add_widget(self.upload_menu_button)
+        upload_menu_button.bind(on_press=self.upload_menu)
+        layout.add_widget(upload_menu_button)
 
-        self.chat_button = Button(
+        chat_button = Button(
             text="Chat Assistant",
             font_size=18,
-            size_hint=(1, 0.18),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.18)
         )
-        self.chat_button.bind(on_press=self.chat_assistant)
-        self.layout.add_widget(self.chat_button)
+        chat_button.bind(on_press=self.chat_assistant)
+        layout.add_widget(chat_button)
 
         self.result_label = Label(
             text="Choose how to get recommendations",
             font_size=16,
-            size_hint=(1, 0.25),
-            color=app.theme['text']
+            size_hint=(1, 0.25)
         )
-        self.layout.add_widget(self.result_label)
+        layout.add_widget(self.result_label)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        self.result_label.color = app.theme['text']
-        for button in [self.upload_menu_button, self.chat_button]:
-            button.color = app.theme['text']
-            button.background_color = app.theme['box']
+        self.add_widget(layout)
 
     def upload_menu(self, instance):
-        self.result_label.text = "Opening menu upload..."
+        self.manager.current = "menu_text_input"
 
     def chat_assistant(self, instance):
         self.result_label.text = "Opening chat assistant..."
+
+
+class MenuTextInputScreen(BaseScreen):
+    """Screen for entering wine names from a menu via text input"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(
+            text="Enter Wine Names from Menu",
+            font_size=22,
+            size_hint=(1, 0.12)
+        )
+        layout.add_widget(section_label)
+
+        instructions = Label(
+            text="Enter one wine name per line:",
+            font_size=14,
+            size_hint=(1, 0.08)
+        )
+        layout.add_widget(instructions)
+
+        # Text input for wine names
+        self.wine_input = TextInput(
+            multiline=True,
+            size_hint=(1, 0.55),
+            hint_text="Wine Name 1\nWine Name 2\nWine Name 3"
+        )
+        layout.add_widget(self.wine_input)
+
+        # Buttons
+        button_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint=(1, 0.1),
+            spacing=10
+        )
+
+        process_button = Button(
+            text="Process Menu",
+            font_size=16,
+            size_hint=(0.6, 1)
+        )
+        process_button.bind(on_press=self.process_wines)
+        button_layout.add_widget(process_button)
+
+        cancel_button = Button(
+            text="Cancel",
+            font_size=16,
+            size_hint=(0.4, 1)
+        )
+        cancel_button.bind(on_press=self.cancel_menu)
+        button_layout.add_widget(cancel_button)
+
+        layout.add_widget(button_layout)
+
+        self.add_widget(layout)
+
+    def process_wines(self, instance):
+        wine_text = self.wine_input.text.strip()
+        if not wine_text:
+            self.wine_input.hint_text = "Please enter at least one wine name"
+            return
+        
+        # Process the text input
+        from wineMatching import processMenuText
+        try:
+            results = processMenuText(wine_text)
+            
+            # Store results in app for MenuResultsScreen to access
+            app = App.get_running_app()
+            app.menu_results = results
+            
+            # Navigate to results screen
+            self.manager.current = "menu_results"
+        except Exception as e:
+            self.wine_input.hint_text = f"Error: {str(e)}"
+
+    def cancel_menu(self, instance):
+        self.manager.current = "recommendation"
 
 
 class PreferencesScreen(BaseScreen):
     """Screen for selecting wine preferences"""
     
     def __init__(self, **kwargs):
-        app = App.get_running_app()
         super().__init__(**kwargs)
         self.category_spinners = {}
         self.options = self.load_preferences_data()
@@ -1451,19 +1371,7 @@ class PreferencesScreen(BaseScreen):
         scroll.add_widget(scroll_layout)
         layout.add_widget(scroll)
         self.add_widget(layout)
-
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
     
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
     def load_preferences_data(self):
         """Parse wine info notes.txt to get all preferences"""
         options = {
@@ -1550,21 +1458,6 @@ class PreferencesScreen(BaseScreen):
         except Exception as e:
             popup = Popup(title='Error', content=Label(text=f'Error saving preference: {str(e)}'), size_hint=(0.6, 0.3))
             popup.open()
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        
-        for spinner in self.category_spinners.values():
-            spinner.background_color = app.theme['box']
-            spinner.color = app.theme['text']
 
 
 class UserProfileScreen(BaseScreen):
@@ -1572,7 +1465,6 @@ class UserProfileScreen(BaseScreen):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        app = App.get_running_app()
         
         layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
         layout.add_widget(self.create_header())
@@ -1591,17 +1483,6 @@ class UserProfileScreen(BaseScreen):
         layout.add_widget(clear_btn)
         
         self.add_widget(layout)
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-    
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
     
     def on_enter(self):
         self.load_profile_data()
@@ -1712,305 +1593,462 @@ class UserProfileScreen(BaseScreen):
         popup = Popup(title='Confirm Clear', content=content, size_hint=(0.8, 0.5))
         cancel_btn.bind(on_press=popup.dismiss)
         popup.open()
+
+
+class MenuResultsScreen(BaseScreen):
+    """Screen displaying identified wines from menu text input"""
     
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        section_label = Label(
+            text="Menu Results",
+            font_size=22,
+            size_hint=(1, 0.12)
+        )
+        layout.add_widget(section_label)
+
+        # Scrollable results area
+        results_scroll = ScrollView(size_hint=(1, 0.75))
+        self.results_container = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=8,
+            padding=10
+        )
+        self.results_container.bind(minimum_height=self.results_container.setter('height'))
+        results_scroll.add_widget(self.results_container)
+        layout.add_widget(results_scroll)
+
+        # Add to collection button
+        add_button = Button(
+            text="Add Selected to Collection",
+            font_size=16,
+            size_hint=(1, 0.08)
+        )
+        add_button.bind(on_press=self.add_to_collection)
+        layout.add_widget(add_button)
+
+        self.add_widget(layout)
+
+    def load_user_preferences(self):
+        """Load user preferences from myProfile.csv"""
+        preferences = {}
+        try:
+            if os.path.exists('myProfile.csv'):
+                df = pd.read_csv('myProfile.csv')
+                for col in df.columns:
+                    values = df[col].dropna()
+                    values = [str(v).strip() for v in values if str(v).strip()]
+                    preferences[col] = values
+        except Exception as e:
+            print(f"Error loading preferences: {e}")
+        return preferences
+
+    def wine_matches_preferences(self, wine_data, preferences):
+        """Check if wine matches any user preferences"""
+        if not preferences:
+            return False
+        
+        # Fields to check from wine data
+        wine_fields = {
+            'Types': wine_data.get('Types', ''),
+            'Country': wine_data.get('Country', ''),
+            'Characteristics': wine_data.get('Characteristics', ''),
+            'ABV': wine_data.get('ABV', ''),
+            'Region': wine_data.get('Region', ''),
+            'Style': wine_data.get('Style', '')
+        }
+        
+        # Check if any wine field value matches any user preference
+        for pref_category, pref_values in preferences.items():
+            if pref_category in wine_fields:
+                wine_value = str(wine_fields[pref_category]).lower().strip()
+                for pref_value in pref_values:
+                    if pref_value.lower() in wine_value or wine_value in pref_value.lower():
+                        return True
+        
+        return False
+
+    def on_enter(self):
+        self.user_preferences = self.load_user_preferences()
+        self.display_results()
+
+    def display_results(self):
+        self.results_container.clear_widgets()
+        
+        app = App.get_running_app()
+        if not hasattr(app, 'menu_results') or not app.menu_results:
+            error_label = Label(text="No results to display", font_size=14, size_hint_y=None, height=50)
+            self.results_container.add_widget(error_label)
+            return
+        
+        results = app.menu_results
+        
+        # Display matched wines
+        if results['matched_wines']:
+            matched_label = Label(
+                text=f"Matched Wines ({results['total_matched']}/{results['total_input']})",
+                font_size=16,
+                size_hint_y=None,
+                height=40,
+                bold=True
+            )
+            self.results_container.add_widget(matched_label)
+            
+            for wine in results['matched_wines']:
+                is_recommended = self.wine_matches_preferences(wine, self.user_preferences)
+                wine_card = self.create_wine_card(wine, is_recommended)
+                self.results_container.add_widget(wine_card)
+        
+        # Display unmatched wines
+        if results['unmatched_wines']:
+            unmatched_label = Label(
+                text=f"Unmatched ({len(results['unmatched_wines'])})",
+                font_size=14,
+                size_hint_y=None,
+                height=35,
+                color=(1, 0.5, 0.5, 1)
+            )
+            self.results_container.add_widget(unmatched_label)
+            
+            for wine in results['unmatched_wines']:
+                unmatched_card = BoxLayout(
+                    orientation='vertical',
+                    size_hint_y=None,
+                    height=60,
+                    padding=10,
+                    spacing=5
+                )
+                unmatched_card.canvas.before.clear()
+                from kivy.graphics import Color, Rectangle
+                with unmatched_card.canvas.before:
+                    Color(0.3, 0.3, 0.3, 0.5)
+                    Rectangle(size=unmatched_card.size, pos=unmatched_card.pos)
+                
+                title = Label(
+                    text=f"'{wine['Original Input']}' (confidence: {wine['Confidence']:.2f})",
+                    font_size=13,
+                    size_hint_y=None,
+                    height=30
+                )
+                unmatched_card.add_widget(title)
+                
+                note = Label(
+                    text="Not found in database",
+                    font_size=11,
+                    size_hint_y=None,
+                    height=25,
+                    color=(1, 0.7, 0.7, 1)
+                )
+                unmatched_card.add_widget(note)
+                
+                self.results_container.add_widget(unmatched_card)
+
+    def create_wine_card(self, wine_data, is_recommended=False):
+        """Create a clickable card for a wine result"""
+        card_height = 150 if is_recommended else 120
+        card = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=card_height,
+            padding=10,
+            spacing=5
+        )
+        
+        # Store wine data on the card for later access
+        card.wine_data = wine_data
+        
+        # Recommendation label if applicable
+        if is_recommended:
+            rec_label = Label(
+                text="Recommended Based on your Preferences!",
+                font_size=12,
+                size_hint_y=None,
+                height=25,
+                bold=True,
+                color=(0.2, 0.5, 0.8, 1)
+            )
+            card.add_widget(rec_label)
+        
+        # Wine name (clickable)
+        name_btn = Button(
+            text=wine_data['Wine Name'],
+            font_size=14,
+            size_hint_y=None,
+            height=40,
+            background_color=(0.2, 0.5, 0.8, 1)
+        )
+        name_btn.bind(on_press=self.show_wine_details)
+        card.add_widget(name_btn)
+        
+        # Confidence score
+        confidence_label = Label(
+            text=f"Confidence: {wine_data['Confidence']:.2%}",
+            font_size=11,
+            size_hint_y=None,
+            height=20,
+            color=(0.7, 0.7, 0.7, 1)
+        )
+        card.add_widget(confidence_label)
+        
+        # Quick info
+        info_text = f"{wine_data['Types']} • {wine_data['Country']} • {wine_data['ABV']}"
+        info_label = Label(
+            text=info_text,
+            font_size=11,
+            size_hint_y=None,
+            height=30
+        )
+        card.add_widget(info_label)
+        
+        return card
+
+    def show_wine_details(self, instance):
+        """Navigate to wine details screen"""
+        # Find parent card with wine_data
+        parent = instance.parent
+        while parent and not hasattr(parent, 'wine_data'):
+            parent = parent.parent
+        
+        if parent and hasattr(parent, 'wine_data'):
+            app = App.get_running_app()
+            app.selected_wine = parent.wine_data
+            self.manager.current = "wine_details"
+
+    def add_to_collection(self, instance):
+        """Add matched wines to collection"""
+        app = App.get_running_app()
+        if not hasattr(app, 'menu_results'):
+            return
+        
+        from wineProcessing import wineCollection
+        
+        added_count = 0
+        for wine in app.menu_results['matched_wines']:
+            try:
+                wineCollection(wine['Wine Name'])
+                added_count += 1
+            except Exception as e:
+                print(f"Error adding {wine['Wine Name']}: {str(e)}")
+        
+        popup = Popup(
+            title='Added to Collection',
+            content=Label(text=f"Successfully added {added_count} wine(s) to your collection!"),
+            size_hint=(0.7, 0.3)
+        )
+        popup.open()
+        
+        # Return to recommendation screen
+        Clock.schedule_once(lambda dt: self.go_home(None), 2)
+
+
+class WineDetailsScreen(BaseScreen):
+    """Screen displaying detailed wine information"""
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=20,
+            spacing=12
+        )
+
+        layout.add_widget(self.create_header())
+
+        # Scrollable details area
+        details_scroll = ScrollView(size_hint=(1, 0.85))
+        self.details_container = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=15,
+            padding=10
+        )
+        self.details_container.bind(minimum_height=self.details_container.setter('height'))
+        details_scroll.add_widget(self.details_container)
+        layout.add_widget(details_scroll)
+
+        # Add to collection button
+        add_button = Button(
+            text="Add to Collection",
+            font_size=16,
+            size_hint=(1, 0.08)
+        )
+        add_button.bind(on_press=self.add_wine_to_collection)
+        layout.add_widget(add_button)
+
+        self.add_widget(layout)
+
+    def on_enter(self):
+        self.display_wine_details()
+
+    def display_wine_details(self):
+        self.details_container.clear_widgets()
+        
+        app = App.get_running_app()
+        if not hasattr(app, 'selected_wine') or not app.selected_wine:
+            error_label = Label(
+                text="No wine selected",
+                font_size=14,
+                size_hint_y=None,
+                height=50
+            )
+            self.details_container.add_widget(error_label)
+            return
+        
+        wine = app.selected_wine
+        
+        # Wine name - title
+        name_label = Label(
+            text=wine['Wine Name'],
+            font_size=18,
+            bold=True,
+            size_hint_y=None,
+            height=50
+        )
+        self.details_container.add_widget(name_label)
+        
+        # Display the 6 required fields
+        fields = [
+            ("Type", wine.get('Types', 'N/A')),
+            ("Country", wine.get('Country', 'N/A')),
+            ("Characteristics", wine.get('Characteristics', 'N/A')),
+            ("ABV", wine.get('ABV', 'N/A')),
+            ("Region", wine.get('Region', 'N/A')),
+            ("Style", wine.get('Style', 'N/A'))
+        ]
+        
+        for field_name, field_value in fields:
+            field_box = BoxLayout(
+                orientation='vertical',
+                size_hint_y=None,
+                height=100,
+                padding=30,
+                spacing=5
+            )
+            if field_name=="Characteristics": #Allow room for up to 4 entries
+                field_box = BoxLayout(
+                    orientation='vertical',
+                    size_hint_y=None,
+                    height=100,
+                    padding=30,
+                    spacing=30
+                )
+            label_header = Label(
+                text=f"{field_name}:",
+                font_size=13,
+                bold=True,
+                size_hint_y=None,
+                height=25
+            )
+            field_box.add_widget(label_header)
+            
+            label_value = Label(
+                text=str(field_value),
+                font_size=12,
+                size_hint_y=None,
+                height=40,
+                text_size=(field_box.width - 20, None)
+            )
+            field_box.add_widget(label_value)
+            
+            self.details_container.add_widget(field_box)
+
+    def add_wine_to_collection(self, instance):
+        """Add the displayed wine to collection"""
+        app = App.get_running_app()
+        if not hasattr(app, 'selected_wine'):
+            return
+        
+        from wineProcessing import wineCollection
+        wine_name = app.selected_wine['Wine Name']
+        
+        try:
+            wineCollection(wine_name)
+            popup = Popup(
+                title='Added to Collection',
+                content=Label(text=f"'{wine_name}' added to your collection!"),
+                size_hint=(0.7, 0.3)
+            )
+            popup.open()
+            
+            # Close after 2 seconds
+            Clock.schedule_once(lambda dt: popup.dismiss(), 2)
+        except Exception as e:
+            popup = Popup(
+                title='Error',
+                content=Label(text=f"Error: {str(e)}"),
+                size_hint=(0.7, 0.3)
+            )
+            popup.open()
 
 
 class SettingsScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
+        layout = BoxLayout(
             orientation='vertical',
             padding=20,
             spacing=12
         )
 
-        self.layout.add_widget(self.create_header())
+        layout.add_widget(self.create_header())
 
-        self.section_label = Label(
+        section_label = Label(
             text="Settings",
             font_size=22,
-            size_hint=(1, 0.14),
-            color=app.theme['text']
+            size_hint=(1, 0.14)
         )
-        self.layout.add_widget(self.section_label)
+        layout.add_widget(section_label)
 
-        self.notifications_button = Button(
+        notifications_button = Button(
             text="Notifications",
             font_size=18,
-            size_hint=(1, 0.18),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.18)
         )
-        self.notifications_button.bind(on_press=self.notifications)
-        self.layout.add_widget(self.notifications_button)
+        notifications_button.bind(on_press=self.notifications)
+        layout.add_widget(notifications_button)
 
-        self.theme_button = Button(
+        theme_button = Button(
             text="Theme",
             font_size=18,
-            size_hint=(1, 0.18),
-            background_color=app.theme['box'],
-            color=app.theme['text']
+            size_hint=(1, 0.18)
         )
-        self.theme_button.bind(on_press=self.theme)
-        self.layout.add_widget(self.theme_button)
+        theme_button.bind(on_press=self.theme)
+        layout.add_widget(theme_button)
 
         self.result_label = Label(
             text="Settings options will appear here",
             font_size=16,
-            size_hint=(1, 0.25),
-            color=app.theme['text']
+            size_hint=(1, 0.25)
         )
-        self.layout.add_widget(self.result_label)
+        layout.add_widget(self.result_label)
 
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        self.section_label.color = app.theme['text']
-        self.result_label.color = app.theme['text']
-        for button in [self.notifications_button, self.theme_button]:
-            button.color = app.theme['text']
-            button.background_color = app.theme['box']
+        self.add_widget(layout)
 
     def notifications(self, instance):
         self.result_label.text = "Notifications settings coming soon..."
 
     def theme(self, instance):
-        self.manager.current = "theme"
-
-
-class ThemeScreen(BaseScreen):
-    colors = {
-        'White': (1, 1, 1, 1),
-        'Black': (0, 0, 0, 1),
-        'Gray': (0.5, 0.5, 0.5, 1),
-        'Blue': (0, 0, 1, 1),
-        'Green': (0, 1, 0, 1),
-        'Red': (1, 0, 0, 1),
-        'Yellow': (1, 1, 0, 1),
-        'Purple': (0.5, 0, 0.5, 1)
-    }
-    reverse_colors = {v: k for k, v in colors.items()}
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        app = App.get_running_app()
-
-        self.layout = BoxLayout(
-            orientation='vertical',
-            padding=20,
-            spacing=12
-        )
-
-        self.layout.add_widget(self.create_header())
-
-        self.section_label = Label(
-            text="Theme Settings",
-            font_size=22,
-            size_hint=(1, 0.1),
-            color=app.theme['text']
-        )
-        self.layout.add_widget(self.section_label)
-
-        # Background color
-        bg_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.15))
-        self.bg_label = Label(text="Background:", size_hint=(0.4, 1), color=app.theme['text'])
-        self.bg_spinner = Spinner(
-            text='White',
-            values=('White', 'Black', 'Gray', 'Blue', 'Green', 'Red', 'Yellow', 'Purple'),
-            size_hint=(0.6, 1),
-            background_color=app.theme['box'],
-            color=app.theme['text']
-        )
-        bg_layout.add_widget(self.bg_label)
-        bg_layout.add_widget(self.bg_spinner)
-        self.layout.add_widget(bg_layout)
-
-        # Text color
-        text_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.15))
-        self.text_label = Label(text="Text:", size_hint=(0.4, 1), color=app.theme['text'])
-        self.text_spinner = Spinner(
-            text='Black',
-            values=('White', 'Black', 'Gray', 'Blue', 'Green', 'Red', 'Yellow', 'Purple'),
-            size_hint=(0.6, 1),
-            background_color=app.theme['box'],
-            color=app.theme['text']
-        )
-        text_layout.add_widget(self.text_label)
-        text_layout.add_widget(self.text_spinner)
-        self.layout.add_widget(text_layout)
-
-        # Box color
-        box_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.15))
-        self.box_label = Label(text="Boxes:", size_hint=(0.4, 1), color=app.theme['text'])
-        self.box_spinner = Spinner(
-            text='Gray',
-            values=('White', 'Black', 'Gray', 'Blue', 'Green', 'Red', 'Yellow', 'Purple'),
-            size_hint=(0.6, 1),
-            background_color=app.theme['box'],
-            color=app.theme['text']
-        )
-        box_layout.add_widget(self.box_label)
-        box_layout.add_widget(self.box_spinner)
-        self.layout.add_widget(box_layout)
-
-        # Save button
-        self.save_button = Button(
-            text="Save Theme",
-            font_size=18,
-            size_hint=(1, 0.15),
-            background_color=app.theme['box'],
-            color=app.theme['text']
-        )
-        self.save_button.bind(on_press=self.save_theme)
-        self.layout.add_widget(self.save_button)
-
-        self.status_label = Label(
-            text="",
-            font_size=16,
-            size_hint=(1, 0.1),
-            color=app.theme['text']
-        )
-        self.layout.add_widget(self.status_label)
-
-        self.add_widget(self.layout)
-
-        # Set background color using canvas
-        with self.canvas.before:
-            from kivy.graphics import Color, Rectangle
-            self.bg_color = Color(*app.theme['background'])
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_bg, size=self.update_bg)
-
-        # Load current theme
-        self.load_theme()
-
-    def update_bg(self, *args):
-        if hasattr(self, 'bg_rect'):
-            self.bg_rect.pos = self.pos
-            self.bg_rect.size = self.size
-
-    def load_theme(self):
-        app = App.get_running_app()
-        self.bg_spinner.text = self.reverse_colors.get(app.theme['background'], 'White')
-        self.text_spinner.text = self.reverse_colors.get(app.theme['text'], 'Black')
-        self.box_spinner.text = self.reverse_colors.get(app.theme['box'], 'Gray')
-
-    def save_theme(self, instance):
-        theme = {
-            'background': self.bg_spinner.text,
-            'text': self.text_spinner.text,
-            'box': self.box_spinner.text
-        }
-        theme_file = os.path.join(os.path.dirname(__file__), 'theme.json')
-        import json
-        with open(theme_file, 'w') as f:
-            json.dump(theme, f)
-        self.status_label.text = "Theme saved!"
-        # Apply theme to app
-        app = App.get_running_app()
-        app.theme = {
-            'background': self.colors[self.bg_spinner.text],
-            'text': self.colors[self.text_spinner.text],
-            'box': self.colors[self.box_spinner.text]
-        }
-        # Update all screens
-        self.apply_theme_to_all_screens()
-
-    def apply_theme(self):
-        app = App.get_running_app()
-        # Update canvas
-        if hasattr(self, 'bg_color'):
-            self.bg_color.rgba = app.theme['background']
-        # Update header
-        if hasattr(self, 'title_button'):
-            self.title_button.color = app.theme['text']
-            self.title_button.background_color = app.theme['box']
-        if hasattr(self, 'subtitle'):
-            self.subtitle.color = app.theme['text']
-        # Update widgets
-        for widget in [self.section_label, self.bg_label, self.text_label, self.box_label, self.status_label]:
-            widget.color = app.theme['text']
-        for spinner in [self.bg_spinner, self.text_spinner, self.box_spinner]:
-            spinner.color = app.theme['text']
-            spinner.background_color = app.theme['box']
-        self.save_button.color = app.theme['text']
-        self.save_button.background_color = app.theme['box']
-
-    def apply_theme_to_all_screens(self):
-        app = App.get_running_app()
-        for screen in app.root.screens:
-            if hasattr(screen, 'apply_theme'):
-                screen.apply_theme()
+        self.result_label.text = "Theme settings coming soon..."
 
 
 class WineApp(App):
-    colors = {
-        'White': (1, 1, 1, 1),
-        'Black': (0, 0, 0, 1),
-        'Gray': (0.5, 0.5, 0.5, 1),
-        'Blue': (0, 0, 1, 1),
-        'Green': (0, 1, 0, 1),
-        'Red': (1, 0, 0, 1),
-        'Yellow': (1, 1, 0, 1),
-        'Purple': (0.5, 0, 0.5, 1)
-    }
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.recently_saved_wines = []
-        self.theme = self.load_theme()
-    
-    def load_theme(self):
-        theme_file = os.path.join(os.path.dirname(__file__), 'theme.json')
-        if os.path.exists(theme_file):
-            import json
-            with open(theme_file, 'r') as f:
-                theme_names = json.load(f)
-            return {
-                'background': self.colors.get(theme_names.get('background', 'White'), (1,1,1,1)),
-                'text': self.colors.get(theme_names.get('text', 'Black'), (0,0,0,1)),
-                'box': self.colors.get(theme_names.get('box', 'Gray'), (0.5,0.5,0.5,1))
-            }
-        else:
-            return {
-                'background': (1,1,1,1),
-                'text': (0,0,0,1),
-                'box': (0.5,0.5,0.5,1)
-            }
+        self.menu_results = None
+        self.selected_wine = None
     
     def add_recent_wine(self, wine_name, image_filename=''):
         """Add a wine to the recently saved list"""
@@ -2035,8 +2073,10 @@ class WineApp(App):
         sm.add_widget(AddWineScreen(name="add_wine"))
         sm.add_widget(CameraScreen(name="camera"))
         sm.add_widget(RecommendationScreen(name="recommendation"))
+        sm.add_widget(MenuTextInputScreen(name="menu_text_input"))
+        sm.add_widget(MenuResultsScreen(name="menu_results"))
+        sm.add_widget(WineDetailsScreen(name="wine_details"))
         sm.add_widget(SettingsScreen(name="settings"))
-        sm.add_widget(ThemeScreen(name="theme"))
         return sm
 
 
