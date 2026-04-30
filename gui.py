@@ -1100,6 +1100,7 @@ class RecentlySavedScreen(BaseScreen):
 class EditProfileScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        app = App.get_running_app()
 
         layout = BoxLayout(
             orientation='vertical',
@@ -1130,6 +1131,18 @@ class EditProfileScreen(BaseScreen):
         layout.add_widget(wine_scroll)
 
         self.add_widget(layout)
+
+        with self.canvas.before:
+            from kivy.graphics import Color, Rectangle
+            self.bg_color = Color(*app.theme['background'])
+            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
+
+        self.bind(pos=self.update_bg, size=self.update_bg)
+    
+    def update_bg(self, *args):
+        if hasattr(self, 'bg_rect'):
+            self.bg_rect.pos = self.pos
+            self.bg_rect.size = self.size
 
     def on_enter(self):
         self.load_wines()
@@ -1290,6 +1303,20 @@ class EditProfileScreen(BaseScreen):
         
         popup = Popup(title='Confirm Delete', content=content, size_hint=(0.8, 0.5))
         popup.open()
+    
+    def apply_theme(self):
+        app = App.get_running_app()
+        # Update canvas
+        if hasattr(self, 'bg_color'):
+            self.bg_color.rgba = app.theme['background']
+        # Update header
+        if hasattr(self, 'title_button'):
+            self.title_button.color = app.theme['text']
+            self.title_button.background_color = app.theme['box']
+        if hasattr(self, 'subtitle'):
+            self.subtitle.color = app.theme['text']
+        # Note: wine_container items are dynamic and not updated here
+
 
 
 class RecommendationScreen(BaseScreen):
@@ -1386,6 +1413,7 @@ class PreferencesScreen(BaseScreen):
     """Screen for selecting wine preferences"""
     
     def __init__(self, **kwargs):
+        app = App.get_running_app()
         super().__init__(**kwargs)
         self.category_spinners = {}
         self.options = self.load_preferences_data()
@@ -1423,7 +1451,19 @@ class PreferencesScreen(BaseScreen):
         scroll.add_widget(scroll_layout)
         layout.add_widget(scroll)
         self.add_widget(layout)
+
+        with self.canvas.before:
+            from kivy.graphics import Color, Rectangle
+            self.bg_color = Color(*app.theme['background'])
+            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
+
+        self.bind(pos=self.update_bg, size=self.update_bg)
     
+    def update_bg(self, *args):
+        if hasattr(self, 'bg_rect'):
+            self.bg_rect.pos = self.pos
+            self.bg_rect.size = self.size
+
     def load_preferences_data(self):
         """Parse wine info notes.txt to get all preferences"""
         options = {
@@ -1510,6 +1550,21 @@ class PreferencesScreen(BaseScreen):
         except Exception as e:
             popup = Popup(title='Error', content=Label(text=f'Error saving preference: {str(e)}'), size_hint=(0.6, 0.3))
             popup.open()
+    def apply_theme(self):
+        app = App.get_running_app()
+        # Update canvas
+        if hasattr(self, 'bg_color'):
+            self.bg_color.rgba = app.theme['background']
+        # Update header
+        if hasattr(self, 'title_button'):
+            self.title_button.color = app.theme['text']
+            self.title_button.background_color = app.theme['box']
+        if hasattr(self, 'subtitle'):
+            self.subtitle.color = app.theme['text']
+        
+        for spinner in self.category_spinners.values():
+            spinner.background_color = app.theme['box']
+            spinner.color = app.theme['text']
 
 
 class UserProfileScreen(BaseScreen):
@@ -1517,6 +1572,7 @@ class UserProfileScreen(BaseScreen):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        app = App.get_running_app()
         
         layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
         layout.add_widget(self.create_header())
@@ -1535,6 +1591,17 @@ class UserProfileScreen(BaseScreen):
         layout.add_widget(clear_btn)
         
         self.add_widget(layout)
+        with self.canvas.before:
+            from kivy.graphics import Color, Rectangle
+            self.bg_color = Color(*app.theme['background'])
+            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
+
+        self.bind(pos=self.update_bg, size=self.update_bg)
+    
+    def update_bg(self, *args):
+        if hasattr(self, 'bg_rect'):
+            self.bg_rect.pos = self.pos
+            self.bg_rect.size = self.size
     
     def on_enter(self):
         self.load_profile_data()
@@ -1645,6 +1712,12 @@ class UserProfileScreen(BaseScreen):
         popup = Popup(title='Confirm Clear', content=content, size_hint=(0.8, 0.5))
         cancel_btn.bind(on_press=popup.dismiss)
         popup.open()
+    
+    def update_bg(self, *args):
+        if hasattr(self, 'bg_rect'):
+            self.bg_rect.pos = self.pos
+            self.bg_rect.size = self.size
+    
 
 
 class SettingsScreen(BaseScreen):
