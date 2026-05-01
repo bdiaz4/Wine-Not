@@ -58,6 +58,12 @@ text
 
 text
 
+#### Take New Photo
+
+![Take New Photo](featureImages/TakeNewPhoto.png)
+
+text
+
 ### Add Manually
 
 ![Add Manually](featureImages/AddManually.png)
