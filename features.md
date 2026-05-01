@@ -34,7 +34,7 @@ text
 
 text
 
-### My Prefrences
+### My Preferences
 
 ![My Prefrences](featureImages/MyPrefrences.png)
 
