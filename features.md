@@ -1,107 +1,107 @@
 # Home Page
 
-![homepage](featureImages/features.png)
+<img src="featureImages/features.png" width="650"/>
 
-The home page contains four navigation options **My Profile, Add Wine, Get Recomendation, and Settings**
+The home page contains four navigation options **My Profile, Add Wine, Get Recommendation, and Settings**
 
 ## My Profile
 
-![My Profile](featureImages/MyProfile.png)
+<img src="featureImages/MyProfile.png" width="650"/>
 
 text
 
 ### Saved Wines
 
-![Saved Wines](featureImages/SavedWines.png)
+<img src="featureImages/SavedWines.png" width="650"/>
 
 text
 
 ### Favorites
 
-![Favorites](featureImages/Favorites.png)
+<img src="featureImages/Favorites.png" width="650"/>
 
 text
 
 ### Recently Saved
 
-![Recently Saved](featureImages/RecentlySaved.png)
+<img src="featureImages/RecentlySaved.png" width="650"/>
 
 text
 
 ### Edit Profile
 
-![Edit Profile](featureImages/EditProfile.png)
+<img src="featureImages/EditProfile.png" width="650"/>
 
 text
 
 ### My Preferences
 
-![My Prefrences](featureImages/MyPrefrences.png)
+<img src="featureImages/MyPrefrences.png" width="650"/>
 
 text
 
 ### User Profile
 
-![User Profile](featureImages/UserProfile.png)
+<img src="featureImages/UserProfile.png" width="650"/>
 
 text
 
 ## Add Wine
 
-![Add Wine](featureImages/AddWine.png)
+<img src="featureImages/AddWine.png" width="650"/>
 
 text
 
 ### Upload Picture
 
-![Upload Picture](featureImages/UploadPicture.png)
+<img src="featureImages/UploadPicture.png" width="650"/>
 
 text
 
 #### Take New Photo
 
-![Take New Photo](featureImages/TakeNewPhoto.png)
+<img src="featureImages/TakeNewPhoto.png" width="650"/>
 
 text
 
 ### Add Manually
 
-![Add Manually](featureImages/AddManually.png)
+<img src="featureImages/AddManually.png" width="650"/>
 
 text
 
-## Get Recomendation
+## Get Recommendation
 
-![Get Recomendation](featureImages/GetRecomendation.png)
+<img src="featureImages/GetRecomendation.png" width="650"/>
 
 text
 
 ### Upload Menu
 
-![Upload Menu](featureImages/UploadMenu.png)
+<img src="featureImages/UploadMenu.png" width="650"/>
 
 text
 
 ### Chat Assistant
 
-![Chat Assistant](featureImages/ChatAssistant.png)
+<img src="featureImages/ChatAssistant.png" width="650"/>
 
 text
 
 ## Settings
 
-![Settings](featureImages/Settings.png)
+<img src="featureImages/Settings.png" width="650"/>
 
 text
 
 ### Reset Data
 
-![Reset Data](featureImages/ResetData.png)
+<img src="featureImages/ResetData.png" width="650"/>
 
 text
 
 ### Theme
 
-![Theme](featureImages/Theme.png)
+<img src="featureImages/Theme.png" width="650"/>
 
 text
