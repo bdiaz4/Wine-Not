@@ -36,6 +36,7 @@ Builder.load_string('''
             size_hint: 0.5, 1
 ''')
 
+# A custom widget for handling camera operations
 class CameraClick(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -47,10 +48,12 @@ class CameraClick(BoxLayout):
             no_camera_label = Label(text="No camera available", font_size=18)
             self.add_widget(no_camera_label)
 
+    # Toggle the camera's play state
     def toggle_play(self):
         if self.camera:
             self.camera.play = not self.camera.play
 
+    # Capture a photo from the camera
     def capture(self):
         if self.camera:
             def on_ok(instance):
@@ -78,6 +81,7 @@ class CameraClick(BoxLayout):
         else:
             print("No camera available for capture")
 
+# A base class for all screens
 class BaseScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -88,15 +92,18 @@ class BaseScreen(Screen):
                 self.bg_color = Color(*app.theme['background'])
                 self.bg_rect = Rectangle(pos=self.pos, size=self.size)
             self.bind(pos=self.update_bg, size=self.update_bg)
-
+    
+    # Update the background when the screen is resized
     def update_bg(self, *args):
         if hasattr(self, 'bg_rect'):
             self.bg_rect.pos = self.pos
             self.bg_rect.size = self.size
 
+    # Navigate to the home screen
     def go_home(self, instance):
         self.manager.current = "home"
 
+    # Create the header for the screen
     def create_header(self):
         app = App.get_running_app()
         header = BoxLayout(orientation='vertical', size_hint=(1, 0.2), spacing=5)
@@ -120,6 +127,7 @@ class BaseScreen(Screen):
         header.add_widget(self.subtitle)
         return header
 
+    # Apply the current theme to the screen
     def apply_theme(self):
         app = App.get_running_app()
         if hasattr(self, 'bg_color'):
@@ -142,7 +150,7 @@ class BaseScreen(Screen):
             if hasattr(widget, 'background_normal') and isinstance(widget, Spinner):
                 widget.background_normal = ''
 
-
+# A class for the home screen
 class HomeScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -220,11 +228,13 @@ class HomeScreen(BaseScreen):
 
         self.bind(pos=self.update_bg, size=self.update_bg)
 
+    # Update the background rectangle's position and size
     def update_bg(self, *args):
         if hasattr(self, 'bg_rect'):
             self.bg_rect.pos = self.pos
             self.bg_rect.size = self.size
 
+    # Apply the current theme to the screen
     def apply_theme(self):
         app = App.get_running_app()
         if hasattr(self, 'bg_color'):
@@ -235,21 +245,28 @@ class HomeScreen(BaseScreen):
             button.color = app.theme['text']
             button.background_color = app.theme['box']
 
+    # Navigate to different screens
     def go_profile(self, instance):
         self.manager.current = "profile"
 
+    # Navigate to the "Add Wine" screen
     def go_add_wine(self, instance):
         self.manager.current = "add_wine"
 
+    # Navigate to the "Get Recommendation" screen
     def go_recommendation(self, instance):
         self.manager.current = "recommendation"
 
+    # Navigate to the "Settings" screen
     def go_settings(self, instance):
         self.manager.current = "settings"
 
+    # Navigate to the "Menu Text Input" screen
     def upload_menu(self, instance):
         self.manager.current = 'menu_text_input'
 
+
+# saved wines screen
 class SavedWinesScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -284,9 +301,11 @@ class SavedWinesScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Load the saved wines when the screen is entered
     def on_enter(self):
         self.load_wines()
 
+    # Look up a wine in the dataset
     def get_wine_from_dataset(self, wine_name):
         """Lookup wine data from WineDataset.csv"""
         try:
@@ -324,6 +343,7 @@ class SavedWinesScreen(BaseScreen):
         
         return None
 
+    # Display the details of a specific wine
     def show_wine_details(self, wine_name):
         """Navigate to wine details screen for clicked wine"""
         wine_data = self.get_wine_from_dataset(wine_name)
@@ -339,6 +359,7 @@ class SavedWinesScreen(BaseScreen):
             )
             popup.open()
 
+    # Load the list of wines from the CSV file
     def load_wines(self):
         self.wine_container.clear_widgets()
         csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
@@ -435,13 +456,14 @@ class SavedWinesScreen(BaseScreen):
             error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
             self.wine_container.add_widget(error_label)
 
+    # Toggle the favorite status of a wine
     def toggle_favorite(self, instance):
         from wineProcessing import toggleFavorite
         is_fav = toggleFavorite(instance.wine_name)
         instance.text = "Favorite" if is_fav else "Save to Favorites"
         instance.state = 'down' if is_fav else 'normal'
 
-
+# A class for the favorites screen
 class FavoritesScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -476,9 +498,11 @@ class FavoritesScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Load the favorite wines when the screen is entered
     def on_enter(self):
         self.load_wines()
 
+    # Look up a wine in the dataset
     def get_wine_from_dataset(self, wine_name):
         """Lookup wine data from WineDataset.csv"""
         try:
@@ -516,6 +540,7 @@ class FavoritesScreen(BaseScreen):
         
         return None
 
+    # Display the details of a specific wine
     def show_wine_details(self, wine_name):
         """Navigate to wine details screen for clicked wine"""
         wine_data = self.get_wine_from_dataset(wine_name)
@@ -531,6 +556,8 @@ class FavoritesScreen(BaseScreen):
             )
             popup.open()
 
+
+    # Load the list of wines from the CSV file
     def load_wines(self):
         self.wine_container.clear_widgets()
         csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
@@ -627,6 +654,7 @@ class FavoritesScreen(BaseScreen):
             error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
             self.wine_container.add_widget(error_label)
 
+    # Toggle the favorite status of a wine
     def toggle_favorite(self, instance):
         from wineProcessing import toggleFavorite
         is_fav = toggleFavorite(instance.wine_name)
@@ -638,7 +666,7 @@ class FavoritesScreen(BaseScreen):
             card = instance.parent.parent
             self.wine_container.remove_widget(card)
 
-
+# A class for the profile screen
 class ProfileScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -715,25 +743,31 @@ class ProfileScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Show the saved wines
     def show_saved_wines(self, instance):
         self.manager.current = "saved_wines"
 
+    # Show the favorite wines
     def show_favorites(self, instance):
         self.manager.current = "favorites"
 
+    # Show recently saved wines
     def show_recent(self, instance):
         self.manager.current = "recently_saved"
 
+    # Show the edit profile screen
     def edit_profile(self, instance):
         self.manager.current = "edit_profile"
 
+    # Show the user's preferences
     def my_preferences(self, instance):
         self.manager.current = "my_preferences"
 
+    # Show the user's profile
     def user_profile(self, instance):
         self.manager.current = "user_profile"
 
-
+# A class for the screen to add a new wine
 class AddWineScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -780,11 +814,13 @@ class AddWineScreen(BaseScreen):
         self.main_layout = layout
         self.in_upload_mode = False
 
+    # Refresh the screen when it is entered
     def on_enter(self):
         # Refresh the image grid if we were in upload mode and returned from camera
         if self.in_upload_mode:
             self.refresh_image_grid()
 
+    # Upload a picture of a new wine
     def upload_picture(self, instance):
         self.in_upload_mode = True
         self.clear_widgets()
@@ -814,6 +850,7 @@ class AddWineScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Populate the image grid with existing images
     def populate_image_grid(self):
         """Populate the image grid with images from wineImages folder"""
         self.grid.clear_widgets()
@@ -830,12 +867,13 @@ class AddWineScreen(BaseScreen):
                     )
                     button.bind(on_press=lambda instance, fn=filename: self.select_image(fn))
                     self.grid.add_widget(button)
-
+    # Refresh the image grid
     def refresh_image_grid(self):
         """Refresh the image grid to show newly captured photos"""
         if self.in_upload_mode and hasattr(self, 'grid'):
             self.populate_image_grid()
 
+    # Add a new wine manually
     def add_manually(self, instance):
         content = BoxLayout(orientation='vertical', spacing=10, padding=10)
         content.add_widget(Label(text="Enter Wine Name:", font_size=16))
@@ -844,6 +882,7 @@ class AddWineScreen(BaseScreen):
         
         buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
         
+        # Add a new wine to the collection
         def on_add(instance):
             wine_name = wine_input.text.strip()
             if wine_name:
@@ -869,9 +908,11 @@ class AddWineScreen(BaseScreen):
         popup = Popup(title='Add Wine Manually', content=content, size_hint=(0.8, 0.4))
         popup.open()
 
+    # Select an image from the grid
     def select_image(self, filename):
         Clock.schedule_once(lambda dt: self.do_process_image(filename), 0.1)
 
+    # Process the selected image
     def do_process_image(self, filename):
         self.loading_popup = Popup(title='Processing', content=Label(text='Processing image...\nPlease wait while we analyze the wine label.'), size_hint=(0.6, 0.4), auto_dismiss=False)
         self.loading_popup.open()
@@ -885,6 +926,7 @@ class AddWineScreen(BaseScreen):
         
         threading.Thread(target=process_thread).start()
 
+    # Display the result of the image processing
     def show_result(self, result, filename):
         self.loading_popup.dismiss()
         
@@ -935,10 +977,11 @@ class AddWineScreen(BaseScreen):
             popup = Popup(title='Processing Failed', content=content, size_hint=(0.8, 0.6))
             popup.open()
 
+    # Take a photo with the camera
     def take_photo(self, instance):
         self.manager.current = "camera"
 
-
+# A class for the camera screen
 class CameraScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -955,10 +998,11 @@ class CameraScreen(BaseScreen):
         
         self.add_widget(layout)
     
+    # Cancel the camera operation
     def cancel_camera(self, instance):
         self.manager.current = "add_wine"
 
-
+# A class for the screen showing recently saved wines
 class RecentlySavedScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -993,9 +1037,11 @@ class RecentlySavedScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Refresh the list of recently saved wines when the screen is entered
     def on_enter(self):
         self.load_recent_wines()
 
+    # Load the list of recently saved wines
     def load_recent_wines(self):
         self.wine_container.clear_widgets()
         app = App.get_running_app()
@@ -1072,7 +1118,7 @@ class RecentlySavedScreen(BaseScreen):
             wine_card.add_widget(info_layout)
             self.wine_container.add_widget(wine_card)
 
-
+# A class for the screen to edit the user's profile
 class EditProfileScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1107,9 +1153,11 @@ class EditProfileScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Load the list of wines when the screen is entered
     def on_enter(self):
         self.load_wines()
 
+    # Load the wines from the CSV file
     def load_wines(self):
         self.wine_container.clear_widgets()
         csv_path = os.path.join(os.path.dirname(__file__), 'wineCollection.csv')
@@ -1193,6 +1241,7 @@ class EditProfileScreen(BaseScreen):
             error_label = Label(text=f"Error loading wines: {str(e)}", font_size=16)
             self.wine_container.add_widget(error_label)
 
+    # Edit a wine
     def on_edit_wine(self, instance):
         wine_name = instance.wine_name
         wine_row = instance.wine_row
@@ -1212,6 +1261,7 @@ class EditProfileScreen(BaseScreen):
         # Buttons
         buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
         
+        # Save the changes
         def on_save(instance):
             new_name = rename_input.text.strip()
             new_amount = amount_input.text.strip()
@@ -1239,6 +1289,7 @@ class EditProfileScreen(BaseScreen):
         popup = Popup(title=f'Edit Wine: {wine_name}', content=content, size_hint=(0.85, 0.7))
         popup.open()
 
+    # Delete a wine
     def on_delete_wine(self, instance):
         wine_name = instance.wine_name
         
@@ -1267,11 +1318,7 @@ class EditProfileScreen(BaseScreen):
         popup = Popup(title='Confirm Delete', content=content, size_hint=(0.8, 0.5))
         popup.open()
 
-
-
-
-
-
+# A class for the screen to input wine names via text
 class MenuTextInputScreen(BaseScreen):
     """Screen for entering wine names from a menu via text input"""
     
@@ -1335,6 +1382,7 @@ class MenuTextInputScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Process the wine names entered in the text input
     def process_wines(self, instance):
         wine_text = self.wine_input.text.strip()
         if not wine_text:
@@ -1358,7 +1406,7 @@ class MenuTextInputScreen(BaseScreen):
     def cancel_menu(self, instance):
         self.manager.current = "home"
 
-
+# A class for the screen to select wine preferences
 class PreferencesScreen(BaseScreen):
     """Screen for selecting wine preferences"""
     
@@ -1400,7 +1448,7 @@ class PreferencesScreen(BaseScreen):
         scroll.add_widget(scroll_layout)
         layout.add_widget(scroll)
         self.add_widget(layout)
-    
+    # Load the preferences data from the text file
     def load_preferences_data(self):
         """Parse Preferences.txt to get all preferences"""
         options = {
@@ -1436,6 +1484,7 @@ class PreferencesScreen(BaseScreen):
             print(f"Error loading preferences: {e}")
             return options
     
+    # Add a new preference
     def add_preference(self, instance):
         """Add selected preference to myProfile.csv"""
         category = instance.category
@@ -1488,7 +1537,7 @@ class PreferencesScreen(BaseScreen):
             popup = Popup(title='Error', content=Label(text=f'Error saving preference: {str(e)}'), size_hint=(0.6, 0.3))
             popup.open()
 
-
+# A class for the user profile screen
 class UserProfileScreen(BaseScreen):
     """Screen to display saved user preferences"""
     
@@ -1513,9 +1562,11 @@ class UserProfileScreen(BaseScreen):
         
         self.add_widget(layout)
     
+    # Load the profile data when the screen is entered
     def on_enter(self):
         self.load_profile_data()
     
+    # Load the profile data from the CSV file
     def load_profile_data(self):
         """Load and display preferences from myProfile.csv"""
         self.profile_layout.clear_widgets()
@@ -1575,6 +1626,7 @@ class UserProfileScreen(BaseScreen):
             error_label = Label(text=f"Error loading profile: {str(e)}", font_size=14)
             self.profile_layout.add_widget(error_label)
     
+    # Delete a specific preference
     def delete_preference(self, instance):
         """Delete a specific preference"""
         category = instance.category
@@ -1589,6 +1641,7 @@ class UserProfileScreen(BaseScreen):
             popup = Popup(title='Error', content=Label(text=f'Error deleting preference: {str(e)}'), size_hint=(0.6, 0.3))
             popup.open()
     
+    # Clear all preferences
     def clear_preferences(self, instance):
         """Clear all preferences"""
         content = BoxLayout(orientation='vertical', spacing=10, padding=10)
@@ -1597,6 +1650,7 @@ class UserProfileScreen(BaseScreen):
         
         buttons = BoxLayout(orientation='horizontal', size_hint_y=None, height=50, spacing=10)
         
+        # Add a confirmation button
         def confirm_clear(inst):
             profile_path = 'myProfile.csv'
             try:
@@ -1623,7 +1677,7 @@ class UserProfileScreen(BaseScreen):
         cancel_btn.bind(on_press=popup.dismiss)
         popup.open()
 
-
+# A class for the screen displaying the results of menu text processing
 class MenuResultsScreen(BaseScreen):
     """Screen displaying identified wines from menu text input"""
     
@@ -1668,6 +1722,7 @@ class MenuResultsScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Load user preferences from the profile
     def load_user_preferences(self):
         """Load user preferences from myProfile.csv"""
         preferences = {}
@@ -1682,6 +1737,7 @@ class MenuResultsScreen(BaseScreen):
             print(f"Error loading preferences: {e}")
         return preferences
 
+    # Check if a wine matches the user's preferences
     def wine_matches_preferences(self, wine_data, preferences):
         """Check if wine matches any user preferences"""
         if not preferences:
@@ -1706,11 +1762,13 @@ class MenuResultsScreen(BaseScreen):
                         return True
         
         return False
-
+    
+    # Display the results when the screen is entered
     def on_enter(self):
         self.user_preferences = self.load_user_preferences()
         self.display_results()
 
+    # Display the results in the UI
     def display_results(self):
         self.results_container.clear_widgets()
         
@@ -1782,6 +1840,7 @@ class MenuResultsScreen(BaseScreen):
                 
                 self.results_container.add_widget(unmatched_card)
 
+    # Create a card for each wine in the results
     def create_wine_card(self, wine_data, is_recommended=False):
         """Create a clickable card for a wine result"""
         card_height = 150 if is_recommended else 120
@@ -1841,6 +1900,7 @@ class MenuResultsScreen(BaseScreen):
         
         return card
 
+    # Show details for a specific wine
     def show_wine_details(self, instance):
         """Navigate to wine details screen"""
         # Find parent card with wine_data
@@ -1853,6 +1913,7 @@ class MenuResultsScreen(BaseScreen):
             app.selected_wine = parent.wine_data
             self.manager.current = "wine_details"
 
+    # Add a wine to the user's collection
     def add_to_collection(self, instance):
         """Add matched wines to collection"""
         app = App.get_running_app()
@@ -1880,7 +1941,7 @@ class MenuResultsScreen(BaseScreen):
         # Return to recommendation screen
         Clock.schedule_once(lambda dt: self.go_home(None), 2)
 
-
+# A class for the screen displaying detailed wine information
 class WineDetailsScreen(BaseScreen):
     """Screen displaying detailed wine information"""
     
@@ -1918,9 +1979,11 @@ class WineDetailsScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Display the wine details when the screen is entered
     def on_enter(self):
         self.display_wine_details()
 
+    # Display the details of the selected wine
     def display_wine_details(self):
         self.details_container.clear_widgets()
         
@@ -1993,6 +2056,7 @@ class WineDetailsScreen(BaseScreen):
             
             self.details_container.add_widget(field_box)
 
+    # Add the currently displayed wine to the user's collection
     def add_wine_to_collection(self, instance):
         """Add the displayed wine to collection"""
         app = App.get_running_app()
@@ -2022,7 +2086,7 @@ class WineDetailsScreen(BaseScreen):
             )
             popup.open()
 
-
+# A class for the settings screen
 class SettingsScreen(BaseScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -2067,6 +2131,7 @@ class SettingsScreen(BaseScreen):
 
         self.add_widget(layout)
 
+    # Reset all user data
     def reset_data(self, instance):
         content = BoxLayout(orientation='vertical', spacing=10, padding=10)
 
@@ -2117,11 +2182,11 @@ class SettingsScreen(BaseScreen):
 
         popup.open()
             
-
+    # Change the application's theme
     def theme(self, instance):
         self.manager.current = "theme"
 
-
+# A class for the theme selection screen
 class ThemeScreen(BaseScreen):
     colors = {
         'White': (1, 1, 1, 1),
@@ -2217,6 +2282,7 @@ class ThemeScreen(BaseScreen):
 
         self.load_theme()
 
+    # Load the current theme
     def load_theme(self):
         app = App.get_running_app()
         app_theme = app.theme
@@ -2224,6 +2290,7 @@ class ThemeScreen(BaseScreen):
         self.text_spinner.text = self.reverse_colors.get(app_theme['text'], 'Black')
         self.box_spinner.text = self.reverse_colors.get(app_theme['box'], 'Gray')
 
+    # Save the current theme
     def save_theme(self, instance):
         theme = {
             'background': self.bg_spinner.text,
@@ -2243,6 +2310,7 @@ class ThemeScreen(BaseScreen):
         }
         self.apply_theme_to_all_screens()
 
+    # Apply the current theme to all widgets
     def apply_theme(self):
         super().apply_theme()
         app = App.get_running_app()
@@ -2255,13 +2323,14 @@ class ThemeScreen(BaseScreen):
         self.save_button.color = app.theme['text']
         self.save_button.background_color = app.theme['box']
 
+    # Apply the current theme to all screens
     def apply_theme_to_all_screens(self):
         app = App.get_running_app()
         for screen in app.root.screens:
             if hasattr(screen, 'apply_theme'):
                 screen.apply_theme()
 
-
+# A class for the main application
 class WineApp(App):
     colors = {
         'White': (1, 1, 1, 1),
@@ -2281,6 +2350,7 @@ class WineApp(App):
         self.selected_wine = None
         self.theme = self.load_theme()
     
+    # Load the user's saved theme
     def load_theme(self):
         theme_file = os.path.join(os.path.dirname(__file__), 'theme.json')
         if os.path.exists(theme_file):
@@ -2299,6 +2369,7 @@ class WineApp(App):
                 'box': (0.5,0.5,0.5,1)
             }
 
+    # Add a wine to the user's recently saved list
     def add_recent_wine(self, wine_name, image_filename=''):
         """Add a wine to the recently saved list"""
         self.recently_saved_wines.append({
@@ -2307,6 +2378,7 @@ class WineApp(App):
             'timestamp': time.time()
         })
     
+    # Build the different screens in the application
     def build(self):
         sm = ScreenManager()
         sm.add_widget(HomeScreen(name="home"))
