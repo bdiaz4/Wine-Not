@@ -39,6 +39,6 @@ Results of the pytests after running `test_gui.py`
 
 ## Features
 
-![features](features.png)
+![features](featureImages/features.png)
 
 all features are explained here on the [features](/features.md) page
