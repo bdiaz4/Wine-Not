@@ -681,7 +681,7 @@ class ProfileScreen(BaseScreen):
         layout.add_widget(recent_button)
 
         edit_button = Button(
-            text="Edit Profile",
+            text="Edit Wines",
             font_size=18,
             size_hint=(1, 0.14)
         )
@@ -689,7 +689,7 @@ class ProfileScreen(BaseScreen):
         layout.add_widget(edit_button)
 
         preferences_button = Button(
-            text="My Preferences",
+            text="Edit Preferences",
             font_size=18,
             size_hint=(1, 0.14)
         )
@@ -697,7 +697,7 @@ class ProfileScreen(BaseScreen):
         layout.add_widget(preferences_button)
 
         user_profile_button = Button(
-            text="User Profile",
+            text="User Preferences",
             font_size=18,
             size_hint=(1, 0.14)
         )
@@ -1415,7 +1415,7 @@ class PreferencesScreen(BaseScreen):
         layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
         layout.add_widget(self.create_header())
         
-        section_label = Label(text="My Preferences", font_size=22, size_hint=(1, 0.08))
+        section_label = Label(text="Add Preferences", font_size=22, size_hint=(1, 0.08))
         layout.add_widget(section_label)
         
         scroll = ScrollView(size_hint=(1, 0.92))
@@ -1543,7 +1543,7 @@ class UserProfileScreen(BaseScreen):
         layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
         layout.add_widget(self.create_header())
         
-        section_label = Label(text="User Profile", font_size=22, size_hint=(1, 0.08))
+        section_label = Label(text="User Preferences", font_size=22, size_hint=(1, 0.08))
         layout.add_widget(section_label)
         
         scroll = ScrollView(size_hint=(1, 0.85))
