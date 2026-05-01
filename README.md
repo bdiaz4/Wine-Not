@@ -36,3 +36,9 @@ A mobile app written in Python. Upload a picture of a wine bottle or a whole win
 Results of the pytests after running `test_gui.py`
 
 ![pytest](pytestResults.png)
+
+## Features
+
+![features](features.png)
+
+all features are explained here on the [features](/features.md) page
