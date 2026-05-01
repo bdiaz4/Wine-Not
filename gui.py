@@ -2085,13 +2085,13 @@ class SettingsScreen(BaseScreen):
         )
         layout.add_widget(section_label)
 
-        notifications_button = Button(
-            text="Notifications",
+        reset_data_button = Button(
+            text="Reset Data",
             font_size=18,
             size_hint=(1, 0.18)
         )
-        notifications_button.bind(on_press=self.notifications)
-        layout.add_widget(notifications_button)
+        reset_data_button.bind(on_press=self.reset_data)
+        layout.add_widget(reset_data_button)
 
         theme_button = Button(
             text="Theme",
@@ -2110,8 +2110,56 @@ class SettingsScreen(BaseScreen):
 
         self.add_widget(layout)
 
-    def notifications(self, instance):
-        self.result_label.text = "Notifications settings coming soon..."
+    def reset_data(self, instance):
+        content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+
+        content.add_widget(Label(text="Reset ALL profile data?", font_size=16))
+        content.add_widget(Label(text="This will delete preferences and saved data.\nThis cannot be undone.", font_size=12))
+
+        buttons = BoxLayout(size_hint_y=None, height=50, spacing=10)
+
+        def confirm_reset(inst):
+            try:
+                # --- CLEAR FILES ---
+                # Clear preferences
+                if os.path.exists('myProfile.csv'):
+                    df = pd.read_csv('myProfile.csv')
+                    df = df.iloc[0:0]
+                    df.to_csv('myProfile.csv', index=False)
+
+                # Clear wine collection
+                if os.path.exists('wineCollection.csv'):
+                    df = pd.read_csv('wineCollection.csv')
+                    df = df.iloc[0:0]
+                    df.to_csv('wineCollection.csv', index=False)
+
+                popup.dismiss()
+                self.result_label.text = "All data has been reset."
+
+            except Exception as e:
+                popup.dismiss()
+                error_popup = Popup(
+                    title='Error',
+                    content=Label(text=str(e)),
+                    size_hint=(0.6, 0.3)
+                )
+                error_popup.open()
+
+        confirm_btn = Button(text="Yes, Reset", background_color=(1, 0.3, 0.3, 1))
+        confirm_btn.bind(on_press=confirm_reset)
+
+        cancel_btn = Button(text="Cancel")
+        
+        buttons.add_widget(confirm_btn)
+        buttons.add_widget(cancel_btn)
+
+        content.add_widget(buttons)
+
+        popup = Popup(title="Confirm Reset", content=content, size_hint=(0.8, 0.5))
+        cancel_btn.bind(on_press=popup.dismiss)
+
+        popup.open()
+            
 
     def theme(self, instance):
         self.manager.current = "theme"
