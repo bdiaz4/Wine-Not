@@ -198,7 +198,7 @@ class HomeScreen(BaseScreen):
             background_color=app.theme['box'],
             color=app.theme['text']
         )
-        self.recommend_button.bind(on_press=self.go_recommendation)
+        self.recommend_button.bind(on_press=self.upload_menu)
         self.layout.add_widget(self.recommend_button)
 
         self.settings_button = Button(
@@ -247,6 +247,8 @@ class HomeScreen(BaseScreen):
     def go_settings(self, instance):
         self.manager.current = "settings"
 
+    def upload_menu(self, instance):
+        self.manager.current = 'menu_text_input'
 
 class SavedWinesScreen(BaseScreen):
     def __init__(self, **kwargs):
@@ -1266,55 +1268,8 @@ class EditProfileScreen(BaseScreen):
         popup.open()
 
 
-class RecommendationScreen(BaseScreen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
-        layout = BoxLayout(
-            orientation='vertical',
-            padding=20,
-            spacing=12
-        )
 
-        layout.add_widget(self.create_header())
-
-        section_label = Label(
-            text="Get Recommendation",
-            font_size=22,
-            size_hint=(1, 0.14)
-        )
-        layout.add_widget(section_label)
-
-        upload_menu_button = Button(
-            text="Upload Menu",
-            font_size=18,
-            size_hint=(1, 0.18)
-        )
-        upload_menu_button.bind(on_press=self.upload_menu)
-        layout.add_widget(upload_menu_button)
-
-        chat_button = Button(
-            text="Chat Assistant",
-            font_size=18,
-            size_hint=(1, 0.18)
-        )
-        chat_button.bind(on_press=self.chat_assistant)
-        layout.add_widget(chat_button)
-
-        self.result_label = Label(
-            text="Choose how to get recommendations",
-            font_size=16,
-            size_hint=(1, 0.25)
-        )
-        layout.add_widget(self.result_label)
-
-        self.add_widget(layout)
-
-    def upload_menu(self, instance):
-        self.manager.current = "menu_text_input"
-
-    def chat_assistant(self, instance):
-        self.result_label.text = "Opening chat assistant..."
 
 
 class MenuTextInputScreen(BaseScreen):
@@ -1910,6 +1865,7 @@ class MenuResultsScreen(BaseScreen):
         for wine in app.menu_results['matched_wines']:
             try:
                 wineCollection(wine['Wine Name'])
+                app.add_recent_wine(wine['Wine Name'])
                 added_count += 1
             except Exception as e:
                 print(f"Error adding {wine['Wine Name']}: {str(e)}")
@@ -2048,6 +2004,7 @@ class WineDetailsScreen(BaseScreen):
         
         try:
             wineCollection(wine_name)
+            app.add_recent_wine(wine_name)
             popup = Popup(
                 title='Added to Collection',
                 content=Label(text=f"'{wine_name}' added to your collection!"),
@@ -2364,7 +2321,6 @@ class WineApp(App):
 
         sm.add_widget(AddWineScreen(name="add_wine"))
         sm.add_widget(CameraScreen(name="camera"))
-        sm.add_widget(RecommendationScreen(name="recommendation"))
         sm.add_widget(MenuTextInputScreen(name="menu_text_input"))
         sm.add_widget(MenuResultsScreen(name="menu_results"))
         sm.add_widget(WineDetailsScreen(name="wine_details"))
