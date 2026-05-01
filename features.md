@@ -2,7 +2,7 @@
 
 <img src="featureImages/features.png" width="650"/>
 
-The home page contains four navigation options **My Profile, Add Wine, Get Recommendation, and Settings**
+The home page contains four navigation options [My Profile](#my-profile), [Add Wine](#add-wine), [Get Recommendation](#get-recommendation), and [Settings](#settings)
 
 ## My Profile
 
