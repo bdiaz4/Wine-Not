@@ -1447,7 +1447,7 @@ class PreferencesScreen(BaseScreen):
         self.add_widget(layout)
     
     def load_preferences_data(self):
-        """Parse wine info notes.txt to get all preferences"""
+        """Parse Preferences.txt to get all preferences"""
         options = {
             'Types': [],
             'Country': [],
@@ -1458,7 +1458,7 @@ class PreferencesScreen(BaseScreen):
         }
         
         try:
-            with open('wine info notes.txt', 'r',encoding='utf-8') as content:
+            with open('Preferences.txt', 'r',encoding='utf-8') as content:
                 line= content.readline().strip()
                 while line:
                     if not line:
