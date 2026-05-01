@@ -1356,7 +1356,7 @@ class MenuTextInputScreen(BaseScreen):
             self.wine_input.hint_text = f"Error: {str(e)}"
 
     def cancel_menu(self, instance):
-        self.manager.current = "recommendation"
+        self.manager.current = "home"
 
 
 class PreferencesScreen(BaseScreen):
